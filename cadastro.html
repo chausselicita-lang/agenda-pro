@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AGENDAPRO — Cadastro do Salão</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --border: #2a2a3a;
+      --gold: #c9a84c;
+      --gold-light: #e8c96d;
+      --text: #f0ede8;
+      --muted: #7a7a8a;
+      --success: #2ecc71;
+      --error: #e74c3c;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow-x: hidden;
+    }
+
+    /* Background decoration */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -200px; right: -200px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -200px; left: -200px;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(201,168,76,0.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .wrapper {
+      width: 100%;
+      max-width: 480px;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Header */
+    .brand {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .brand-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: 4px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .brand-tagline {
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      margin-top: 6px;
+    }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 36px;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+    .card-subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+
+    /* Form */
+    .field {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input::placeholder { color: var(--muted); }
+    input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+    }
+
+    /* Slug preview */
+    .slug-preview {
+      background: rgba(201,168,76,0.06);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: var(--gold-light);
+      margin-top: 8px;
+      display: none;
+      font-family: monospace;
+      letter-spacing: 0.5px;
+    }
+    .slug-preview.visible { display: block; }
+
+    /* Button */
+    .btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-light));
+      border: none;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      color: #0a0a0f;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      margin-top: 8px;
+      letter-spacing: 0.3px;
+    }
+    .btn:hover:not(:disabled) {
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .btn-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(10,10,15,0.3);
+      border-top-color: #0a0a0f;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Alert */
+    .alert {
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 13px;
+      margin-top: 16px;
+      display: none;
+      line-height: 1.5;
+    }
+    .alert.error {
+      background: rgba(231,76,60,0.1);
+      border: 1px solid rgba(231,76,60,0.3);
+      color: #e74c3c;
+      display: block;
+    }
+
+    /* Success screen */
+    .success-screen {
+      display: none;
+      text-align: center;
+      animation: fadeUp 0.5s ease both;
+    }
+    .success-screen.visible { display: block; }
+    .success-icon {
+      width: 64px; height: 64px;
+      background: rgba(46,204,113,0.1);
+      border: 2px solid var(--success);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 28px;
+    }
+    .success-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+    .success-subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+    .link-box {
+      background: var(--bg);
+      border: 1px solid var(--gold);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .link-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .link-url {
+      font-size: 14px;
+      color: var(--gold-light);
+      font-family: monospace;
+      word-break: break-all;
+      line-height: 1.5;
+    }
+    .btn-copy {
+      width: 100%;
+      padding: 13px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .btn-copy:hover {
+      border-color: var(--gold);
+      background: rgba(201,168,76,0.05);
+    }
+    .btn-acess {
+      display: block;
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-light));
+      border: none;
+      border-radius: 10px;
+      color: #0a0a0f;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      text-decoration: none;
+      margin-top: 10px;
+      cursor: pointer;
+      text-align: center;
+      transition: opacity 0.2s;
+    }
+    .btn-acess:hover { opacity: 0.9; }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .footer a { color: var(--gold); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+  <div class="brand">
+    <div class="brand-logo">AGENDAPRO</div>
+    <div class="brand-tagline">Agendamento inteligente para salões</div>
+  </div>
+
+  <div class="card">
+
+    <!-- FORM -->
+    <div id="form-section">
+      <div class="card-title">Cadastre seu salão</div>
+      <div class="card-subtitle">Preencha os dados abaixo e receba seu link de agendamento em segundos.</div>
+
+      <div class="field">
+        <label>Nome do Salão *</label>
+        <input type="text" id="nome" placeholder="Ex: Studio Beleza da Maria" autocomplete="off"/>
+        <div class="slug-preview" id="slug-preview"></div>
+      </div>
+
+      <div class="field">
+        <label>Seu Nome *</label>
+        <input type="text" id="responsavel" placeholder="Seu nome completo"/>
+      </div>
+
+      <div class="field">
+        <label>WhatsApp *</label>
+        <input type="tel" id="telefone" placeholder="(11) 99999-9999"/>
+      </div>
+
+      <div class="field">
+        <label>E-mail *</label>
+        <input type="email" id="email" placeholder="seu@email.com"/>
+      </div>
+
+      <div class="alert" id="alert-error"></div>
+
+      <button class="btn" id="btn-submit" onclick="cadastrar()">
+        Criar minha agenda →
+      </button>
+    </div>
+
+    <!-- SUCCESS -->
+    <div class="success-screen" id="success-section">
+      <div class="success-icon">✓</div>
+      <div class="success-title">Salão cadastrado!</div>
+      <div class="success-subtitle">Seu link de agendamento está pronto.<br/>Compartilhe com seus clientes agora.</div>
+
+      <div class="link-box">
+        <div class="link-label">Seu link de agendamento</div>
+        <div class="link-url" id="link-gerado"></div>
+      </div>
+
+      <button class="btn-copy" onclick="copiarLink()">📋 Copiar link</button>
+      <a class="btn-acess" id="btn-acessar" href="#" target="_blank">Acessar minha agenda →</a>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    Já tem conta? <a href="salao_admin.html">Entrar no painel</a>
+  </div>
+</div>
+
+<script>
+  // ══════════════════════════════════════════
+  // ⚙️ CONFIGURAÇÃO SUPABASE
+  // Cole aqui sua Publishable Key completa
+  // ══════════════════════════════════════════
+  const SUPABASE_URL = 'https://zigghtvlmftgjlohuhla.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_o5ibiwWTvnZ8gXfdJQkFqA_jKZhTiGU';
+
+  // URL base do seu sistema (onde o cliente vai agendar)
+  const BASE_URL = 'https://agenda-pro-ebon.vercel.app';
+
+  // ══════════════════════════════════════════
+  // Gerar slug a partir do nome
+  // ══════════════════════════════════════════
+  function gerarSlug(nome) {
+    return nome
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .substring(0, 40);
+  }
+
+  // Preview do slug ao digitar nome
+  document.getElementById('nome').addEventListener('input', function() {
+    const slug = gerarSlug(this.value);
+    const preview = document.getElementById('slug-preview');
+    if (slug.length > 2) {
+      preview.textContent = `🔗 ${BASE_URL}/${slug}`;
+      preview.classList.add('visible');
+    } else {
+      preview.classList.remove('visible');
+    }
+  });
+
+  // ══════════════════════════════════════════
+  // Cadastro no Supabase
+  // ══════════════════════════════════════════
+  async function cadastrar() {
+    const nome      = document.getElementById('nome').value.trim();
+    const responsavel = document.getElementById('responsavel').value.trim();
+    const telefone  = document.getElementById('telefone').value.trim();
+    const email     = document.getElementById('email').value.trim();
+    const alerta    = document.getElementById('alert-error');
+    const btn       = document.getElementById('btn-submit');
+
+    // Limpar erro anterior
+    alerta.className = 'alert';
+    alerta.textContent = '';
+
+    // Validação
+    if (!nome || !responsavel || !telefone || !email) {
+      alerta.className = 'alert error';
+      alerta.textContent = '⚠️ Preencha todos os campos para continuar.';
+      return;
+    }
+    if (!email.includes('@')) {
+      alerta.className = 'alert error';
+      alerta.textContent = '⚠️ Digite um e-mail válido.';
+      return;
+    }
+
+    // Loading
+    btn.disabled = true;
+    btn.innerHTML = `<div class="btn-loading"><div class="spinner"></div> Criando seu salão...</div>`;
+
+    const slug = gerarSlug(nome);
+
+    try {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/empresas`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({
+          nome: nome,
+          slug: slug,
+          telefone: telefone,
+          email: email,
+          plano: 'trial',
+          ativo: true
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Slug duplicado
+        if (data.code === '23505') {
+          alerta.className = 'alert error';
+          alerta.textContent = '⚠️ Já existe um salão com esse nome. Tente um nome diferente.';
+        } else {
+          throw new Error(data.message || 'Erro ao cadastrar.');
+        }
+        btn.disabled = false;
+        btn.textContent = 'Criar minha agenda →';
+        return;
+      }
+
+      // SUCESSO — mostrar link
+      const linkFinal = `${BASE_URL}/salao_agendamento.html?salao=${slug}`;
+      document.getElementById('link-gerado').textContent = linkFinal;
+      document.getElementById('btn-acessar').href = linkFinal;
+
+      document.getElementById('form-section').style.display = 'none';
+      document.getElementById('success-section').classList.add('visible');
+
+      // Salvar slug no localStorage para uso futuro
+      localStorage.setItem('agendapro_slug', slug);
+      localStorage.setItem('agendapro_nome', nome);
+
+    } catch (err) {
+      alerta.className = 'alert error';
+      alerta.textContent = `❌ Erro: ${err.message}. Tente novamente.`;
+      btn.disabled = false;
+      btn.textContent = 'Criar minha agenda grátis →';
+    }
+  }
+
+  // Copiar link
+  function copiarLink() {
+    const link = document.getElementById('link-gerado').textContent;
+    navigator.clipboard.writeText(link).then(() => {
+      const btn = document.querySelector('.btn-copy');
+      btn.textContent = '✅ Copiado!';
+      setTimeout(() => btn.textContent = '📋 Copiar link', 2000);
+    });
+  }
+
+  // Enter para enviar
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') cadastrar();
+  });
+</script>
+</body>
+</html>
