@@ -3,329 +3,735 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Salão Bella Rosa - Painel</title>
+  <title>AgendaPro — Painel</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
   <style>
-    :root { --primary: #9b2335; --secondary: #c94070; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; min-height: 100vh; }
-    .login-screen {
-      min-height: 100vh; display: flex; align-items: center;
-      justify-content: center; background: linear-gradient(135deg, var(--primary), var(--secondary)); padding: 20px;
+    :root {
+      --bg: #06080F;
+      --surface: rgba(255,255,255,0.025);
+      --surface-hover: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.06);
+      --border-2: rgba(255,255,255,0.10);
+      --blue: #3B82F6;
+      --blue-dim: rgba(59,130,246,0.12);
+      --indigo: #6366F1;
+      --violet: #8B5CF6;
+      --text: #F1F5F9;
+      --muted: #94A3B8;
+      --muted-2: #475569;
+      --success: #10B981;
+      --error: #EF4444;
+      --r: 14px;
+      --r-sm: 10px;
+      --r-lg: 20px;
     }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.02'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ── LOGIN ── */
+    #login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #login-screen::before {
+      content: '';
+      position: absolute;
+      top: -180px; left: 50%;
+      transform: translateX(-50%);
+      width: 700px; height: 500px;
+      background: radial-gradient(ellipse, rgba(99,102,241,0.18) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    #login-screen::after {
+      content: '';
+      position: absolute;
+      bottom: -200px; right: -100px;
+      width: 500px; height: 500px;
+      background: radial-gradient(ellipse, rgba(139,92,246,0.1) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
     .login-card {
-      background: white; border-radius: 20px; padding: 40px 32px;
-      width: 100%; max-width: 360px; text-align: center;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(32px) saturate(180%);
+      -webkit-backdrop-filter: blur(32px) saturate(180%);
+      border: 1px solid var(--border-2);
+      border-radius: var(--r-lg);
+      padding: 48px 36px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03) inset;
+      position: relative;
+      z-index: 1;
     }
-    .login-logo { font-size: 48px; margin-bottom: 12px; }
-    .login-title { font-size: 22px; font-weight: bold; color: var(--primary); margin-bottom: 4px; }
-    .login-sub { font-size: 13px; color: #888; margin-bottom: 28px; }
-    .login-input {
-      width: 100%; padding: 14px 16px; border: 2px solid #f0d0da;
-      border-radius: 12px; font-size: 16px; outline: none; margin-bottom: 16px;
+
+    .login-icon {
+      width: 68px; height: 68px;
+      background: linear-gradient(135deg, var(--indigo), var(--violet));
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 22px;
+      font-size: 30px;
+      box-shadow: 0 12px 40px rgba(99,102,241,0.5), 0 0 0 1px rgba(255,255,255,0.1) inset;
     }
-    .login-input:focus { border-color: var(--primary); }
+
+    .login-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px; font-weight: 800;
+      color: var(--text); margin-bottom: 5px;
+      letter-spacing: -0.03em;
+    }
+
+    .login-sub { font-size: 13px; color: var(--muted-2); margin-bottom: 32px; }
+
+    .login-field {
+      width: 100%; padding: 14px 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border-2);
+      border-radius: var(--r-sm);
+      color: var(--text); font-size: 15px;
+      outline: none; margin-bottom: 14px;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .login-field::placeholder { color: var(--muted-2); }
+
+    .login-field:focus {
+      border-color: var(--indigo);
+      background: rgba(99,102,241,0.06);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+    }
+
     .login-btn {
-      width: 100%; padding: 14px;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      color: white; border: none; border-radius: 12px;
-      font-size: 16px; font-weight: 600; cursor: pointer;
+      width: 100%; padding: 15px;
+      background: linear-gradient(135deg, var(--indigo), var(--violet));
+      color: white; border: none; border-radius: var(--r-sm);
+      font-size: 15px; font-weight: 600; cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.25s;
+      box-shadow: 0 8px 28px rgba(99,102,241,0.4), 0 0 0 1px rgba(255,255,255,0.08) inset;
     }
-    .login-error { color: #e53935; font-size: 13px; margin-top: 12px; }
+
+    .login-btn:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(99,102,241,0.5); }
+    .login-btn:active { transform: translateY(0); }
+
+    .login-error { color: var(--error); font-size: 13px; margin-top: 12px; }
+
+    /* ── APP ── */
     .app { display: none; }
-    header {
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      color: white; padding: 14px 16px;
+
+    .app-header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(6,8,15,0.88);
+      backdrop-filter: blur(24px) saturate(200%);
+      -webkit-backdrop-filter: blur(24px) saturate(200%);
+      border-bottom: 1px solid var(--border);
+      padding: 0 16px; height: 58px;
       display: flex; align-items: center; justify-content: space-between;
     }
-    .header-title { font-size: 16px; font-weight: 600; }
-    .header-sub { font-size: 11px; opacity: 0.8; }
-    .status-badge {
-      display: inline-flex; align-items: center; gap: 5px;
-      background: rgba(255,255,255,0.2); color: white;
-      padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+
+    .header-brand {
+      display: flex; align-items: center; gap: 9px;
+      font-family: 'Syne', sans-serif;
+      font-size: 16px; font-weight: 800;
+      color: var(--text); letter-spacing: -0.02em;
     }
-    .dot { width: 6px; height: 6px; border-radius: 50%; background: #4caf50; animation: pulse 2s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
-    .btn-logout {
-      background: rgba(255,255,255,0.2); color: white; border: none;
-      padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;
+
+    .brand-gem {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, var(--indigo), var(--violet));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      box-shadow: 0 4px 12px rgba(99,102,241,0.4);
     }
+
+    .header-actions { display: flex; align-items: center; gap: 8px; }
+
+    .badge-live {
+      display: flex; align-items: center; gap: 5px;
+      background: rgba(16,185,129,0.08);
+      border: 1px solid rgba(16,185,129,0.18);
+      color: var(--success);
+      padding: 4px 10px; border-radius: 100px;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.03em;
+    }
+
+    .live-dot {
+      width: 5px; height: 5px;
+      background: var(--success); border-radius: 50%;
+      animation: pulseGreen 2s infinite;
+    }
+
+    @keyframes pulseGreen {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    .btn-icon {
+      background: var(--surface);
+      border: 1px solid var(--border-2);
+      color: var(--muted); padding: 6px 13px;
+      border-radius: 8px; font-size: 12px; font-weight: 500;
+      cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+    }
+
+    .btn-icon:hover { background: var(--surface-hover); color: var(--text); }
 
     /* TABS */
-    .tabs {
-      display: flex; background: white;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    .nav-tabs {
+      background: rgba(6,8,15,0.95);
+      border-bottom: 1px solid var(--border);
+      display: flex; padding: 0 6px;
+      overflow-x: auto; scrollbar-width: none;
     }
-    .tab {
-      flex: 1; padding: 12px 4px; text-align: center; font-size: 12px;
-      color: #999; border-bottom: 3px solid transparent; cursor: pointer;
-      font-weight: 600; transition: all 0.2s;
-    }
-    .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
 
-    .container { max-width: 600px; margin: 0 auto; padding: 16px; }
-    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
-    .stat-card {
-      background: white; border-radius: 12px; padding: 12px 8px; text-align: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    .nav-tabs::-webkit-scrollbar { display: none; }
+
+    .nav-tab {
+      flex: 1; min-width: 0;
+      padding: 13px 6px; text-align: center;
+      font-size: 11px; font-weight: 600;
+      color: var(--muted-2);
+      border-bottom: 2px solid transparent;
+      cursor: pointer; white-space: nowrap;
+      transition: all 0.2s; letter-spacing: 0.03em;
+      text-transform: uppercase;
     }
-    .stat-num { font-size: 22px; font-weight: bold; color: var(--primary); }
-    .stat-label { font-size: 10px; color: #888; margin-top: 2px; }
-    .action-bar { display: flex; gap: 8px; margin-bottom: 16px; }
-    .btn-client {
-      flex: 1; padding: 10px; background: white; color: var(--primary);
-      border: 2px solid var(--primary); border-radius: 10px; font-size: 13px;
-      font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; display: block;
+
+    .nav-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* CONTAINER */
+    .page { max-width: 640px; margin: 0 auto; padding: 16px; }
+
+    /* STATS */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px; margin-bottom: 16px;
     }
-    .section-title {
-      font-size: 14px; font-weight: 700; color: var(--primary);
-      margin: 16px 0 10px; display: flex; align-items: center; gap: 6px;
+
+    .stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r); padding: 18px 16px;
+      position: relative; overflow: hidden;
+      transition: border-color 0.2s;
     }
-    .booking-card {
-      background: white; border-radius: 14px; padding: 16px;
-      margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      border-left: 4px solid var(--primary);
+
+    .stat::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(99,102,241,0.35), transparent);
     }
-    .booking-card.cancelado { border-left-color: #ccc; opacity: 0.7; }
-    .booking-card.concluido { border-left-color: #4caf50; }
-    .booking-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-    .booking-name { font-size: 15px; font-weight: 700; color: #333; }
-    .booking-time { font-size: 17px; font-weight: bold; color: var(--primary); }
-    .booking-date-label { font-size: 11px; color: #2196f3; font-weight: 600; margin-bottom: 4px; }
-    .booking-service { font-size: 13px; color: #666; margin-bottom: 6px; }
-    .booking-phone { font-size: 13px; color: #888; }
-    .booking-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
-    .status-chip { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-    .status-agendado { background: #e3f2fd; color: #1565c0; }
-    .status-concluido { background: #e8f5e9; color: #2e7d32; }
-    .status-cancelado { background: #f5f5f5; color: #9e9e9e; }
-    .booking-actions { display: flex; gap: 6px; }
-    .action-btn { padding: 5px 10px; border-radius: 8px; border: none; font-size: 11px; font-weight: 600; cursor: pointer; }
-    .btn-done { background: #e8f5e9; color: #2e7d32; }
-    .btn-cancel { background: #fce4ec; color: #c62828; }
-    .btn-wpp { background: #e8f5e9; color: #1b5e20; }
-    .empty-state { text-align: center; padding: 30px 20px; color: #aaa; }
-    .empty-icon { font-size: 40px; margin-bottom: 10px; }
-    .revenue { font-size: 16px; font-weight: bold; color: #4caf50; }
-    .divider { height: 1px; background: #f0d0da; margin: 16px 0; }
+
+    .stat-lbl {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--muted-2); margin-bottom: 8px;
+    }
+
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 30px; font-weight: 800;
+      color: var(--text); line-height: 1;
+      letter-spacing: -0.03em;
+    }
+
+    .stat-num.accent {
+      background: linear-gradient(135deg, var(--blue), var(--indigo));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-num.green {
+      background: linear-gradient(135deg, #10B981, #34D399);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ACTIONS */
+    .actions { display: flex; gap: 10px; margin-bottom: 18px; }
+
+    .act-btn {
+      flex: 1; padding: 12px 14px;
+      border-radius: var(--r-sm); font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      text-decoration: none;
+    }
+
+    .act-btn.main {
+      background: linear-gradient(135deg, var(--indigo), var(--violet));
+      color: white; border: none;
+      box-shadow: 0 4px 18px rgba(99,102,241,0.35);
+    }
+
+    .act-btn.main:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(99,102,241,0.45); }
+
+    .act-btn.ghost {
+      background: var(--surface); color: var(--muted);
+      border: 1px solid var(--border-2);
+    }
+
+    .act-btn.ghost:hover { background: var(--surface-hover); color: var(--text); }
+
+    /* SECTION HDR */
+    .sec-hdr {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--muted-2); margin: 20px 0 12px;
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    .sec-hdr::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* BOOKING CARD */
+    .bk-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r); padding: 16px;
+      margin-bottom: 10px; transition: border-color 0.2s;
+      position: relative; overflow: hidden;
+    }
+
+    .bk-card::before {
+      content: '';
+      position: absolute; left: 0; top: 0; bottom: 0;
+      width: 3px; background: var(--blue);
+    }
+
+    .bk-card.concluido::before { background: var(--success); }
+    .bk-card.cancelado::before { background: var(--muted-2); opacity: 0.3; }
+    .bk-card.cancelado { opacity: 0.5; }
+    .bk-card:hover { border-color: var(--border-2); }
+
+    .bk-date-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 10px; font-weight: 600; letter-spacing: 0.03em;
+      color: var(--blue);
+      background: rgba(59,130,246,0.08);
+      border: 1px solid rgba(59,130,246,0.15);
+      padding: 3px 9px; border-radius: 100px; margin-bottom: 10px;
+    }
+
+    .bk-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+
+    .bk-name { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .bk-svc { font-size: 12px; color: var(--muted); margin-bottom: 3px; }
+    .bk-phone { font-size: 12px; color: var(--muted-2); }
+
+    .bk-time {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px; font-weight: 800;
+      color: var(--text); white-space: nowrap;
+      letter-spacing: -0.03em;
+    }
+
+    .bk-foot {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 12px; padding-top: 10px;
+      border-top: 1px solid var(--border); gap: 8px;
+    }
+
+    .chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 100px;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
+    }
+
+    .chip-blue { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); color: var(--blue); }
+    .chip-green { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); color: var(--success); }
+    .chip-gray { background: rgba(71,85,105,0.12); border: 1px solid rgba(71,85,105,0.18); color: var(--muted-2); }
+
+    .bk-btns { display: flex; gap: 6px; }
+
+    .sm-btn {
+      padding: 5px 11px; border-radius: 8px;
+      border: 1px solid var(--border-2);
+      background: var(--surface); font-size: 11px; font-weight: 600;
+      cursor: pointer; font-family: 'Inter', sans-serif;
+      color: var(--muted); transition: all 0.2s;
+    }
+
+    .sm-btn:hover { background: var(--surface-hover); color: var(--text); }
+    .sm-btn.ok { color: var(--success); border-color: rgba(16,185,129,0.25); }
+    .sm-btn.ok:hover { background: rgba(16,185,129,0.08); }
+    .sm-btn.no { color: var(--error); border-color: rgba(239,68,68,0.25); }
+    .sm-btn.no:hover { background: rgba(239,68,68,0.08); }
+    .sm-btn.wpp { color: #25D366; border-color: rgba(37,211,102,0.25); }
+    .sm-btn.wpp:hover { background: rgba(37,211,102,0.08); }
+
+    /* EMPTY */
+    .empty { text-align: center; padding: 44px 20px; }
+    .empty-ico { font-size: 36px; margin-bottom: 10px; opacity: 0.35; }
+    .empty-msg { font-size: 13px; color: var(--muted-2); }
+
+    /* FILTERS */
+    .filters {
+      display: flex; gap: 6px; margin-bottom: 14px;
+      overflow-x: auto; scrollbar-width: none; padding-bottom: 2px;
+    }
+
+    .filters::-webkit-scrollbar { display: none; }
+
+    .fpill {
+      padding: 6px 14px; border-radius: 100px;
+      border: 1px solid var(--border);
+      background: transparent; font-size: 12px; font-weight: 600;
+      color: var(--muted-2); cursor: pointer; white-space: nowrap;
+      transition: all 0.2s; font-family: 'Inter', sans-serif;
+    }
+
+    .fpill.active {
+      background: rgba(59,130,246,0.1);
+      border-color: rgba(59,130,246,0.25);
+      color: var(--blue);
+    }
 
     /* CONFIG */
-    .config-card {
-      background: white; border-radius: 16px; padding: 20px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 16px;
+    .cfg-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r); padding: 20px;
+      margin-bottom: 12px; position: relative; overflow: hidden;
     }
-    .config-card h3 { font-size: 15px; color: var(--primary); margin-bottom: 16px; font-weight: 700; }
-    .form-group { margin-bottom: 14px; }
-    .form-group label { display: block; font-size: 12px; font-weight: 600; color: #555; margin-bottom: 6px; }
-    .form-group input, .form-group select {
-      width: 100%; padding: 10px 12px; border: 2px solid #f0d0da;
-      border-radius: 10px; font-size: 14px; outline: none;
+
+    .cfg-block::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(99,102,241,0.3), transparent);
     }
-    .form-group input:focus, .form-group select:focus { border-color: var(--primary); }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .btn-save {
-      width: 100%; padding: 13px;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      color: white; border: none; border-radius: 12px;
-      font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 8px;
+
+    .cfg-ttl {
+      font-size: 13px; font-weight: 700; color: var(--text);
+      margin-bottom: 18px;
+      display: flex; align-items: center; gap: 9px;
     }
-    .btn-add {
-      padding: 8px 16px; background: #fdf2f8; color: var(--primary);
-      border: 2px solid var(--primary); border-radius: 8px;
-      font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 8px;
+
+    .cfg-ico {
+      width: 30px; height: 30px;
+      background: rgba(99,102,241,0.12);
+      border: 1px solid rgba(99,102,241,0.2);
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
     }
-    .service-item {
+
+    .fgroup { margin-bottom: 14px; }
+
+    .flabel {
+      display: block; font-size: 10px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--muted-2); margin-bottom: 8px;
+    }
+
+    .finput {
+      width: 100%; padding: 12px 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border-2);
+      border-radius: var(--r-sm);
+      color: var(--text); font-size: 14px; outline: none;
+      transition: all 0.2s; font-family: 'Inter', sans-serif;
+      -webkit-appearance: none; appearance: none;
+    }
+
+    .finput::placeholder { color: var(--muted-2); }
+
+    .finput:focus {
+      border-color: var(--indigo);
+      background: rgba(99,102,241,0.06);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    }
+
+    .frow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .svc-row {
       display: flex; align-items: center; gap: 8px;
-      background: #fdf2f8; border-radius: 10px; padding: 10px 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm); padding: 10px 12px;
       margin-bottom: 8px;
     }
-    .service-item input {
-      flex: 1; border: 1px solid #f0d0da; border-radius: 8px;
-      padding: 6px 8px; font-size: 13px; outline: none;
+
+    .svc-row input {
+      flex: 1; background: transparent; border: none;
+      border-bottom: 1px solid var(--border);
+      color: var(--text); font-size: 13px;
+      padding: 4px 2px; outline: none;
+      font-family: 'Inter', sans-serif;
     }
-    .service-item input:focus { border-color: var(--primary); }
-    .btn-remove {
-      background: #fce4ec; color: #c62828; border: none;
-      border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 14px;
+
+    .svc-row input:focus { border-bottom-color: var(--indigo); }
+    .svc-row input[type=number] { max-width: 64px; }
+
+    .rm-btn {
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.18);
+      color: var(--error); border-radius: 6px;
+      padding: 4px 9px; cursor: pointer;
+      font-size: 11px; font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
     }
-    .save-success {
-      background: #e8f5e9; color: #2e7d32; border-radius: 10px;
-      padding: 10px; text-align: center; font-size: 13px; font-weight: 600;
+
+    .rm-btn:hover { background: rgba(239,68,68,0.15); }
+
+    .add-svc-btn {
+      width: 100%; padding: 11px;
+      background: rgba(255,255,255,0.03);
+      border: 1px dashed var(--border-2);
+      border-radius: var(--r-sm); color: var(--muted-2);
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      font-family: 'Inter', sans-serif; transition: all 0.2s;
+      margin-top: 4px;
+    }
+
+    .add-svc-btn:hover {
+      background: rgba(99,102,241,0.06);
+      border-color: rgba(99,102,241,0.25);
+      color: var(--indigo);
+    }
+
+    .swatches { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+
+    .swatch {
+      width: 32px; height: 32px; border-radius: 50%;
+      cursor: pointer; border: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .swatch.active {
+      border-color: white;
+      transform: scale(1.18);
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.15);
+    }
+
+    .clr-row { display: flex; align-items: center; gap: 10px; }
+
+    .clr-row input[type=color] {
+      width: 40px; height: 40px;
+      border: 1px solid var(--border-2); border-radius: 8px;
+      cursor: pointer; padding: 2px; background: transparent;
+    }
+
+    .clr-row span { font-size: 13px; color: var(--muted-2); }
+
+    .save-btn {
+      width: 100%; padding: 15px;
+      background: linear-gradient(135deg, var(--indigo), var(--violet));
+      color: white; border: none; border-radius: var(--r-sm);
+      font-size: 15px; font-weight: 600; cursor: pointer;
+      font-family: 'Inter', sans-serif; transition: all 0.25s;
+      box-shadow: 0 6px 20px rgba(99,102,241,0.35);
+      margin-top: 8px;
+    }
+
+    .save-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(99,102,241,0.45); }
+
+    .danger-btn {
+      width: 100%; padding: 13px;
+      background: transparent; color: var(--error);
+      border: 1px solid rgba(239,68,68,0.25);
+      border-radius: var(--r-sm); font-size: 14px; font-weight: 600;
+      cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+    }
+
+    .danger-btn:hover { background: rgba(239,68,68,0.07); }
+
+    .toast {
+      background: rgba(16,185,129,0.08);
+      border: 1px solid rgba(16,185,129,0.2);
+      color: var(--success); border-radius: var(--r-sm);
+      padding: 12px; text-align: center;
+      font-size: 13px; font-weight: 600;
       margin-top: 10px; display: none;
     }
-    /* PALETA DE CORES */
-    .color-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-    .color-preset {
-      width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
-      border: 3px solid transparent; transition: all 0.2s;
-    }
-    .color-preset.active { border-color: #333; transform: scale(1.15); }
-    .color-custom { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
-    .color-custom input[type=color] { width: 44px; height: 44px; border: none; border-radius: 8px; cursor: pointer; padding: 2px; }
-    /* FILTROS TODOS */
-    .filter-bar { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
-    .filter-btn {
-      padding: 6px 12px; border-radius: 20px; border: 2px solid #f0d0da;
-      background: white; font-size: 12px; font-weight: 600; cursor: pointer;
-      color: #999; transition: all 0.2s;
-    }
-    .filter-btn.active { background: var(--primary, #9b2335); color: white; border-color: var(--primary, #9b2335); }
-    /* BOTÃO ZERAR */
-    .btn-danger {
-      width: 100%; padding: 13px; background: white; color: #c62828;
-      border: 2px solid #c62828; border-radius: 12px;
-      font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 8px;
-    }
-    .btn-danger:hover { background: #fce4ec; }
+
+    .sep { height: 1px; background: var(--border); margin: 16px 0; }
   </style>
 </head>
 <body>
 
-<div class="login-screen" id="login-screen">
+<!-- LOGIN -->
+<div id="login-screen">
   <div class="login-card">
-    <div class="login-logo">💇‍♀️</div>
-    <div class="login-title" id="login-salon-name">Salão Bella Rosa</div>
+    <div class="login-icon">✂️</div>
+    <div class="login-title" id="login-salon-name">AgendaPro</div>
     <div class="login-sub">Painel de Gestão</div>
-    <input type="password" class="login-input" id="login-pass" placeholder="Senha" onkeydown="if(event.key==='Enter')login()">
-    <button class="login-btn" onclick="login()">Entrar</button>
-    <div class="login-error" id="login-error" style="display:none">Senha incorreta</div>
+    <input type="password" class="login-field" id="login-pass" placeholder="Senha de acesso" onkeydown="if(event.key==='Enter')login()">
+    <button class="login-btn" onclick="login()">Entrar no Painel</button>
+    <div class="login-error" id="login-error" style="display:none">Senha incorreta. Tente novamente.</div>
   </div>
 </div>
 
+<!-- APP -->
 <div class="app" id="app">
-  <header>
-    <div>
-      <div class="header-title" id="header-salon-name">💇‍♀️ Salão Bella Rosa</div>
-      <div class="header-sub">Painel de Gestão</div>
+
+  <header class="app-header">
+    <div class="header-brand">
+      <div class="brand-gem">✦</div>
+      <span id="header-salon-name">AgendaPro</span>
     </div>
-    <div style="display:flex;align-items:center;gap:10px">
-      <span class="status-badge"><span class="dot"></span>Tempo real</span>
-      <button class="btn-logout" onclick="logout()">Sair</button>
+    <div class="header-actions">
+      <span class="badge-live"><span class="live-dot"></span>Ao vivo</span>
+      <button class="btn-icon" onclick="logout()">Sair</button>
     </div>
   </header>
 
-  <div class="tabs">
-    <div class="tab active" onclick="showTab('agenda')">📅 Agenda</div>
-    <div class="tab" onclick="showTab('todos')">📋 Todos</div>
-    <div class="tab" onclick="showTab('config')">⚙️ Config</div>
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="showTab('agenda')">📅 Agenda</div>
+    <div class="nav-tab" onclick="showTab('todos')">📋 Histórico</div>
+    <div class="nav-tab" onclick="showTab('config')">⚙️ Config</div>
   </div>
 
-  <!-- AGENDA TAB -->
-  <div id="tab-agenda" class="tab-content active">
-    <div class="container">
+  <!-- AGENDA -->
+  <div id="tab-agenda" class="tab-pane active">
+    <div class="page">
       <div class="stats">
-        <div class="stat-card"><div class="stat-num" id="stat-hoje">0</div><div class="stat-label">HOJE</div></div>
-        <div class="stat-card"><div class="stat-num" id="stat-futuros">0</div><div class="stat-label">FUTUROS</div></div>
-        <div class="stat-card"><div class="stat-num" id="stat-total">0</div><div class="stat-label">TOTAL</div></div>
-        <div class="stat-card"><div class="stat-num revenue" id="stat-receita">R$0</div><div class="stat-label">FATURADO</div></div>
+        <div class="stat">
+          <div class="stat-lbl">Hoje</div>
+          <div class="stat-num accent" id="stat-hoje">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Futuros</div>
+          <div class="stat-num" id="stat-futuros">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Total</div>
+          <div class="stat-num" id="stat-total">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Faturado</div>
+          <div class="stat-num green" id="stat-receita">R$0</div>
+        </div>
       </div>
-      <div class="action-bar">
-        <a class="btn-client" href="salao_agendamento.html" target="_blank">📱 Página do Cliente</a>
-        <button class="btn-client" onclick="loadBookings()">🔄 Atualizar</button>
+
+      <div class="actions">
+        <a class="act-btn main" href="salao_agendamento.html" target="_blank">📱 Página do cliente</a>
+        <button class="act-btn ghost" onclick="loadBookings()">↻ Atualizar</button>
       </div>
+
       <div id="bookings-agenda"></div>
     </div>
   </div>
 
-  <!-- TODOS TAB -->
-  <div id="tab-todos" class="tab-content">
-    <div class="container">
-      <div class="filter-bar">
-        <button class="filter-btn active" onclick="setFilter('todos',this)">📋 Todos</button>
-        <button class="filter-btn" onclick="setFilter('agendado',this)">🔵 Agendados</button>
-        <button class="filter-btn" onclick="setFilter('concluido',this)">✅ Concluídos</button>
-        <button class="filter-btn" onclick="setFilter('cancelado',this)">❌ Cancelados</button>
+  <!-- HISTÓRICO -->
+  <div id="tab-todos" class="tab-pane">
+    <div class="page">
+      <div class="filters">
+        <button class="fpill active" onclick="setFilter('todos',this)">Todos</button>
+        <button class="fpill" onclick="setFilter('agendado',this)">Agendados</button>
+        <button class="fpill" onclick="setFilter('concluido',this)">Concluídos</button>
+        <button class="fpill" onclick="setFilter('cancelado',this)">Cancelados</button>
       </div>
       <div id="bookings-todos"></div>
     </div>
   </div>
 
-  <!-- CONFIG TAB -->
-  <div id="tab-config" class="tab-content">
-    <div class="container">
+  <!-- CONFIG -->
+  <div id="tab-config" class="tab-pane">
+    <div class="page">
 
-      <div class="config-card">
-        <h3>🏪 Dados do Salão</h3>
-        <div class="form-group">
-          <label>Nome do Salão</label>
-          <input type="text" id="cfg-salon-name" placeholder="Ex: Salão Bella Rosa">
+      <div class="cfg-block">
+        <div class="cfg-ttl"><div class="cfg-ico">🏪</div>Dados do Negócio</div>
+        <div class="fgroup">
+          <label class="flabel">Nome</label>
+          <input type="text" class="finput" id="cfg-salon-name" placeholder="Ex: Salão Bella Rosa">
         </div>
-        <div class="form-group">
-          <label>Nova Senha do Painel</label>
-          <input type="password" id="cfg-password" placeholder="Deixe em branco para não alterar">
+        <div class="fgroup">
+          <label class="flabel">Nova Senha</label>
+          <input type="password" class="finput" id="cfg-password" placeholder="Em branco para manter a atual">
         </div>
       </div>
 
-      <div class="config-card">
-        <h3>🕐 Horários de Funcionamento</h3>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Abertura</label>
-            <select id="cfg-start"></select>
-          </div>
-          <div class="form-group">
-            <label>Fechamento</label>
-            <select id="cfg-end"></select>
-          </div>
+      <div class="cfg-block">
+        <div class="cfg-ttl"><div class="cfg-ico">🕐</div>Horários</div>
+        <div class="frow">
+          <div class="fgroup"><label class="flabel">Abertura</label><select class="finput" id="cfg-start"></select></div>
+          <div class="fgroup"><label class="flabel">Fechamento</label><select class="finput" id="cfg-end"></select></div>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Início Almoço</label>
-            <select id="cfg-lunch-start"></select>
-          </div>
-          <div class="form-group">
-            <label>Fim Almoço</label>
-            <select id="cfg-lunch-end"></select>
-          </div>
+        <div class="frow">
+          <div class="fgroup"><label class="flabel">Início Almoço</label><select class="finput" id="cfg-lunch-start"></select></div>
+          <div class="fgroup"><label class="flabel">Fim Almoço</label><select class="finput" id="cfg-lunch-end"></select></div>
         </div>
-        <div class="form-group">
-          <label>Intervalo entre horários</label>
-          <select id="cfg-interval">
+        <div class="fgroup">
+          <label class="flabel">Intervalo</label>
+          <select class="finput" id="cfg-interval">
             <option value="30">30 minutos</option>
-            <option value="60">60 minutos (1 hora)</option>
+            <option value="60">1 hora</option>
           </select>
         </div>
       </div>
 
-      <div class="config-card">
-        <h3>✂️ Serviços e Preços</h3>
+      <div class="cfg-block">
+        <div class="cfg-ttl"><div class="cfg-ico">✂️</div>Serviços e Preços</div>
         <div id="services-config"></div>
-        <button class="btn-add" onclick="addService()">+ Adicionar Serviço</button>
+        <button class="add-svc-btn" onclick="addService()">+ Adicionar Serviço</button>
       </div>
 
-      <div class="config-card">
-        <h3>🎨 Paleta de Cores</h3>
-        <p style="font-size:12px;color:#888;margin-bottom:12px">Escolha a cor principal do sistema</p>
-        <div class="color-presets">
-          <div class="color-preset" style="background:#9b2335" onclick="setColor('#9b2335','#c94070')" title="Rosa Vinho"></div>
-          <div class="color-preset" style="background:#1565c0" onclick="setColor('#1565c0','#1e88e5')" title="Azul"></div>
-          <div class="color-preset" style="background:#2e7d32" onclick="setColor('#2e7d32','#43a047')" title="Verde"></div>
-          <div class="color-preset" style="background:#6a1b9a" onclick="setColor('#6a1b9a','#8e24aa')" title="Roxo"></div>
-          <div class="color-preset" style="background:#e65100" onclick="setColor('#e65100','#ef6c00')" title="Laranja"></div>
-          <div class="color-preset" style="background:#00695c" onclick="setColor('#00695c','#00897b')" title="Teal"></div>
-          <div class="color-preset" style="background:#880e4f" onclick="setColor('#880e4f','#ad1457')" title="Pink"></div>
-          <div class="color-preset" style="background:#333333" onclick="setColor('#333333','#555555')" title="Preto"></div>
+      <div class="cfg-block">
+        <div class="cfg-ttl"><div class="cfg-ico">🎨</div>Cor do Sistema</div>
+        <p style="font-size:12px;color:var(--muted-2);margin-bottom:14px">Personaliza as cores da página de agendamento dos clientes.</p>
+        <div class="swatches">
+          <div class="swatch" style="background:#9b2335" onclick="setColor('#9b2335','#c94070')"></div>
+          <div class="swatch" style="background:#1565c0" onclick="setColor('#1565c0','#1e88e5')"></div>
+          <div class="swatch" style="background:#2e7d32" onclick="setColor('#2e7d32','#43a047')"></div>
+          <div class="swatch" style="background:#6a1b9a" onclick="setColor('#6a1b9a','#8e24aa')"></div>
+          <div class="swatch" style="background:#e65100" onclick="setColor('#e65100','#ef6c00')"></div>
+          <div class="swatch" style="background:#00695c" onclick="setColor('#00695c','#00897b')"></div>
+          <div class="swatch" style="background:#880e4f" onclick="setColor('#880e4f','#ad1457')"></div>
+          <div class="swatch" style="background:#1a237e" onclick="setColor('#1a237e','#283593')"></div>
         </div>
-        <div class="color-custom">
+        <div class="clr-row">
           <input type="color" id="custom-color" value="#9b2335" onchange="setColor(this.value, lightenColor(this.value))">
-          <span style="font-size:13px;color:#555">Cor personalizada</span>
+          <span>Cor personalizada</span>
         </div>
       </div>
 
-      <div class="config-card">
-        <h3>🗑️ Zerar Histórico</h3>
-        <p style="font-size:12px;color:#888;margin-bottom:12px">Apaga todos os agendamentos e zera o faturamento. Esta ação não pode ser desfeita.</p>
-        <button class="btn-danger" onclick="zerarHistorico()">🗑️ Zerar Todos os Agendamentos</button>
+      <div class="cfg-block">
+        <div class="cfg-ttl"><div class="cfg-ico">⚠️</div>Zona de Perigo</div>
+        <p style="font-size:12px;color:var(--muted-2);margin-bottom:14px">Apaga todos os agendamentos permanentemente. Ação irreversível.</p>
+        <button class="danger-btn" onclick="zerarHistorico()">Zerar Todos os Agendamentos</button>
       </div>
 
-      <button class="btn-save" onclick="saveConfig()">💾 Salvar Configurações</button>
-      <div class="save-success" id="save-success">✅ Configurações salvas com sucesso!</div>
+      <button class="save-btn" onclick="saveConfig()">Salvar Configurações</button>
+      <div class="toast" id="save-success">✓ Configurações salvas com sucesso!</div>
     </div>
   </div>
+
 </div>
 
 <script>
@@ -337,19 +743,12 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 const DAYS_FULL = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 const MONTHS = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 
-let allBookings = [];
-let realtimeChannel = null;
-let currentFilter = 'todos';
+let allBookings = [], realtimeChannel = null, currentFilter = 'todos';
 let config = {
-  salonName: 'Salão Bella Rosa',
-  password: 'bella123',
-  startTime: '08:00',
-  endTime: '18:00',
-  lunchStart: '12:00',
-  lunchEnd: '13:00',
-  interval: 30,
-  primaryColor: '#9b2335',
-  secondaryColor: '#c94070',
+  salonName: 'AgendaPro', password: 'bella123',
+  startTime: '08:00', endTime: '18:00',
+  lunchStart: '12:00', lunchEnd: '13:00',
+  interval: 30, primaryColor: '#9b2335', secondaryColor: '#c94070',
   services: [
     { name: 'Corte Feminino', icon: '✂️', duration: 60, price: 60 },
     { name: 'Corte Masculino', icon: '💈', duration: 45, price: 45 },
@@ -360,19 +759,19 @@ let config = {
   ]
 };
 
-// Generate time options every 30 min
 function lightenColor(hex) {
   const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
-  const lr = Math.min(255, r+60), lg = Math.min(255, g+60), lb = Math.min(255, b+60);
-  return '#'+[lr,lg,lb].map(x=>x.toString(16).padStart(2,'0')).join('');
+  return '#'+[Math.min(255,r+60),Math.min(255,g+60),Math.min(255,b+60)].map(x=>x.toString(16).padStart(2,'0')).join('');
 }
 
 function applyColors(primary, secondary) {
   document.documentElement.style.setProperty('--primary', primary);
   document.documentElement.style.setProperty('--secondary', secondary || lightenColor(primary));
-  document.getElementById('custom-color').value = primary;
-  document.querySelectorAll('.color-preset').forEach(el => {
-    el.classList.toggle('active', el.style.background === primary || el.style.background.replace(/\s/g,'') === primary);
+  const cc = document.getElementById('custom-color');
+  if (cc) cc.value = primary;
+  document.querySelectorAll('.swatch').forEach(el => {
+    const bg = el.style.background.replace(/\s/g,'');
+    el.classList.toggle('active', bg === primary);
   });
 }
 
@@ -384,24 +783,21 @@ function setColor(primary, secondary) {
 
 function setFilter(filter, btn) {
   currentFilter = filter;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.fpill').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderTodos();
 }
 
 async function zerarHistorico() {
-  if (!confirm('⚠️ Tem certeza? Todos os agendamentos serão apagados e o faturamento zerado. Esta ação não pode ser desfeita!')) return;
+  if (!confirm('Tem certeza? Todos os agendamentos serão apagados permanentemente.')) return;
   try {
-    await db.from('bookings').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await db.from('bookings').delete().neq('id','00000000-0000-0000-0000-000000000000');
     allBookings = [];
-    updateStats();
-    renderAgenda();
-    renderTodos();
-    alert('✅ Histórico zerado com sucesso!');
-  } catch(e) { alert('Erro ao zerar: ' + e.message); }
+    updateStats(); renderAgenda(); renderTodos();
+    alert('Histórico zerado com sucesso!');
+  } catch(e) { alert('Erro: ' + e.message); }
 }
 
-// Generate time options every 30 min
 function generateTimeOptions(selectId, selected) {
   const sel = document.getElementById(selectId);
   sel.innerHTML = '';
@@ -426,13 +822,12 @@ function initTimeSelects() {
 
 function renderServicesConfig() {
   document.getElementById('services-config').innerHTML = config.services.map((s, i) => `
-    <div class="service-item" id="svc-${i}">
-      <input placeholder="Nome" value="${s.name}" onchange="config.services[${i}].name=this.value">
-      <input placeholder="Duração(min)" type="number" value="${s.duration}" style="width:80px" onchange="config.services[${i}].duration=parseInt(this.value)">
-      <input placeholder="R$" type="number" value="${s.price}" style="width:70px" onchange="config.services[${i}].price=parseFloat(this.value)">
-      <button class="btn-remove" onclick="removeService(${i})">✕</button>
-    </div>
-  `).join('');
+    <div class="svc-row">
+      <input placeholder="Nome do serviço" value="${s.name}" onchange="config.services[${i}].name=this.value">
+      <input placeholder="Min" type="number" value="${s.duration}" onchange="config.services[${i}].duration=parseInt(this.value)">
+      <input placeholder="R$" type="number" value="${s.price}" onchange="config.services[${i}].price=parseFloat(this.value)">
+      <button class="rm-btn" onclick="removeService(${i})">✕</button>
+    </div>`).join('');
 }
 
 function addService() {
@@ -440,24 +835,19 @@ function addService() {
   renderServicesConfig();
 }
 
-function removeService(i) {
-  config.services.splice(i, 1);
-  renderServicesConfig();
-}
+function removeService(i) { config.services.splice(i,1); renderServicesConfig(); }
 
 async function loadConfig() {
   try {
-    const { data } = await db.from('settings').select('value').eq('key', 'config').single();
-    if (data && data.value) {
-      config = { ...config, ...JSON.parse(data.value) };
-    }
+    const { data } = await db.from('settings').select('value').eq('key','config').single();
+    if (data && data.value) config = { ...config, ...JSON.parse(data.value) };
   } catch(e) {}
   applyConfig();
 }
 
 function applyConfig() {
   document.getElementById('cfg-salon-name').value = config.salonName;
-  document.getElementById('header-salon-name').textContent = '💇‍♀️ ' + config.salonName;
+  document.getElementById('header-salon-name').textContent = config.salonName;
   document.getElementById('login-salon-name').textContent = config.salonName;
   applyColors(config.primaryColor || '#9b2335', config.secondaryColor || '#c94070');
   initTimeSelects();
@@ -473,18 +863,14 @@ async function saveConfig() {
   config.lunchStart = document.getElementById('cfg-lunch-start').value;
   config.lunchEnd = document.getElementById('cfg-lunch-end').value;
   config.interval = parseInt(document.getElementById('cfg-interval').value);
-  // cores já salvas via setColor()
-
   try {
     await db.from('settings').upsert({ key: 'config', value: JSON.stringify(config) });
-    document.getElementById('header-salon-name').textContent = '💇‍♀️ ' + config.salonName;
+    document.getElementById('header-salon-name').textContent = config.salonName;
     applyColors(config.primaryColor, config.secondaryColor);
-    const s = document.getElementById('save-success');
-    s.style.display = 'block';
-    setTimeout(() => s.style.display = 'none', 3000);
-  } catch(e) {
-    alert('Erro ao salvar: ' + e.message);
-  }
+    const t = document.getElementById('save-success');
+    t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 3000);
+  } catch(e) { alert('Erro ao salvar: ' + e.message); }
 }
 
 async function login() {
@@ -493,8 +879,7 @@ async function login() {
   if (pass === config.password) {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
-    loadBookings();
-    setupRealtime();
+    loadBookings(); setupRealtime();
   } else {
     document.getElementById('login-error').style.display = 'block';
   }
@@ -508,17 +893,17 @@ function logout() {
 }
 
 function showTab(tab) {
-  document.querySelectorAll('.tab').forEach((t,i) => {
+  document.querySelectorAll('.nav-tab').forEach((t,i) => {
     t.classList.remove('active');
     if (['agenda','todos','config'][i] === tab) t.classList.add('active');
   });
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(c => c.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
 }
 
 function setupRealtime() {
   realtimeChannel = db.channel('bookings-rt')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => loadBookings())
+    .on('postgres_changes',{event:'*',schema:'public',table:'bookings'},() => loadBookings())
     .subscribe();
 }
 
@@ -527,11 +912,9 @@ async function loadBookings() {
     const { data, error } = await db.from('bookings').select('*').order('booking_date').order('booking_time');
     if (error) throw error;
     allBookings = data || [];
-    updateStats();
-    renderAgenda();
-    renderTodos();
+    updateStats(); renderAgenda(); renderTodos();
   } catch(e) {
-    document.getElementById('bookings-agenda').innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div>${e.message}</div></div>`;
+    document.getElementById('bookings-agenda').innerHTML = `<div class="empty"><div class="empty-ico">⚠️</div><div class="empty-msg">${e.message}</div></div>`;
   }
 }
 
@@ -552,25 +935,27 @@ function formatDate(dateStr) {
 }
 
 function bookingCard(b, showDate) {
+  const statusLabel = b.status === 'agendado' ? 'Agendado' : b.status === 'concluido' ? 'Concluído' : 'Cancelado';
+  const chipClass = b.status === 'agendado' ? 'chip-blue' : b.status === 'concluido' ? 'chip-green' : 'chip-gray';
   return `
-  <div class="booking-card ${b.status}">
-    ${showDate ? `<div class="booking-date-label">📅 ${formatDate(b.booking_date)}</div>` : ''}
-    <div class="booking-top">
+  <div class="bk-card ${b.status}">
+    ${showDate ? `<div class="bk-date-tag">${formatDate(b.booking_date)}</div>` : ''}
+    <div class="bk-row">
       <div>
-        <div class="booking-name">${b.client_name}</div>
-        <div class="booking-service">✂️ ${b.service} · ${b.service_duration}min · R$ ${b.service_price},00</div>
-        <div class="booking-phone">📱 ${b.client_phone}</div>
+        <div class="bk-name">${b.client_name}</div>
+        <div class="bk-svc">${b.service} · ${b.service_duration}min · R$ ${b.service_price}</div>
+        <div class="bk-phone">${b.client_phone}</div>
       </div>
-      <div class="booking-time">${b.booking_time}</div>
+      <div class="bk-time">${b.booking_time}</div>
     </div>
-    <div class="booking-footer">
-      <span class="status-chip status-${b.status}">${b.status==='agendado'?'🔵 Agendado':b.status==='concluido'?'✅ Concluído':'❌ Cancelado'}</span>
-      <div class="booking-actions">
-        <button class="action-btn btn-wpp" onclick="openWhatsApp('${b.client_phone}','${b.client_name}','${b.service}','${b.booking_time}')">💬</button>
-        ${b.status==='agendado'?`
-          <button class="action-btn btn-done" onclick="updateStatus('${b.id}','concluido')">✅</button>
-          <button class="action-btn btn-cancel" onclick="updateStatus('${b.id}','cancelado')">❌</button>
-        `:''}
+    <div class="bk-foot">
+      <span class="chip ${chipClass}">${statusLabel}</span>
+      <div class="bk-btns">
+        <button class="sm-btn wpp" onclick="openWhatsApp('${b.client_phone}','${b.client_name}','${b.service}','${b.booking_time}')">WhatsApp</button>
+        ${b.status === 'agendado' ? `
+          <button class="sm-btn ok" onclick="updateStatus('${b.id}','concluido')">✓ Concluir</button>
+          <button class="sm-btn no" onclick="updateStatus('${b.id}','cancelado')">✕</button>
+        ` : ''}
       </div>
     </div>
   </div>`;
@@ -580,11 +965,12 @@ function renderAgenda() {
   const today = new Date().toISOString().split('T')[0];
   const todayB = allBookings.filter(b => b.booking_date === today && b.status === 'agendado');
   const futurosB = allBookings.filter(b => b.booking_date > today && b.status === 'agendado');
-  let html = '';
-  html += `<div class="section-title">📅 Hoje — ${formatDate(today)}</div>`;
-  html += todayB.length ? todayB.map(b => bookingCard(b, false)).join('') : `<div class="empty-state"><div class="empty-icon">📅</div><div>Nenhum agendamento hoje</div></div>`;
+  let html = `<div class="sec-hdr">Hoje — ${formatDate(today)}</div>`;
+  html += todayB.length
+    ? todayB.map(b => bookingCard(b, false)).join('')
+    : `<div class="empty"><div class="empty-ico">📅</div><div class="empty-msg">Nenhum agendamento hoje</div></div>`;
   if (futurosB.length) {
-    html += `<div class="divider"></div><div class="section-title">🗓️ Próximos (${futurosB.length})</div>`;
+    html += `<div class="sep"></div><div class="sec-hdr">Próximos (${futurosB.length})</div>`;
     html += futurosB.map(b => bookingCard(b, true)).join('');
   }
   document.getElementById('bookings-agenda').innerHTML = html;
@@ -595,7 +981,7 @@ function renderTodos() {
   if (currentFilter !== 'todos') list = list.filter(b => b.status === currentFilter);
   document.getElementById('bookings-todos').innerHTML = list.length
     ? list.map(b => bookingCard(b, true)).join('')
-    : `<div class="empty-state"><div class="empty-icon">📋</div><div>Nenhum agendamento encontrado</div></div>`;
+    : `<div class="empty"><div class="empty-ico">📋</div><div class="empty-msg">Nenhum agendamento encontrado</div></div>`;
 }
 
 async function updateStatus(id, status) {
@@ -606,11 +992,10 @@ async function updateStatus(id, status) {
 }
 
 function openWhatsApp(phone, name, service, time) {
-  const msg = encodeURIComponent(`Olá ${name}! Confirmando seu agendamento de ${service} às ${time}. Até logo! 💇‍♀️`);
+  const msg = encodeURIComponent(`Olá ${name}! Confirmando seu agendamento de ${service} às ${time}. Até logo!`);
   window.open(`https://wa.me/55${phone.replace(/\D/g,'')}?text=${msg}`, '_blank');
 }
 
-// Init login screen
 loadConfig();
 </script>
 </body>
