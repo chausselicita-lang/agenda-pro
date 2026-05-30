@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Agendamento</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #9b2335;
+      --secondary: #c94070;
+      --bg: #07090F;
+      --surface: rgba(255,255,255,0.04);
+      --surface-2: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.10);
+      --border-2: rgba(255,255,255,0.16);
+      --text: #F8FAFC;
+      --muted: #CBD5E1;
+      --muted-2: #94A3B8;
+      --dim: #64748B;
+      --success: #10B981;
+      --r: 18px;
+      --r-sm: 14px;
+      --r-lg: 24px;
+    }
+
+    *, *::before, *::after {
+      margin: 0; padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* AMBIENT NOISE */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.02'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 9999;
+    }
+
+    /* ── HEADER ── */
+    .app-header {
+      background: rgba(7,9,15,0.92);
+      backdrop-filter: blur(24px) saturate(200%);
+      -webkit-backdrop-filter: blur(24px) saturate(200%);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+      display: flex; align-items: center; gap: 14px;
+      position: sticky; top: 0; z-index: 50;
+    }
+
+    .header-logo {
+      width: 46px; height: 46px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; flex-shrink: 0;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.5);
+    }
+
+    .header-info { flex: 1; }
+
+    .header-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 17px; font-weight: 800;
+      color: var(--text); letter-spacing: -0.02em;
+    }
+
+    .header-sub {
+      font-size: 12px; color: var(--muted-2); margin-top: 2px;
+    }
+
+    .online-badge {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(16,185,129,0.1);
+      border: 1px solid rgba(16,185,129,0.22);
+      color: var(--success);
+      padding: 5px 12px; border-radius: 100px;
+      font-size: 12px; font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .live-dot {
+      width: 6px; height: 6px;
+      background: var(--success); border-radius: 50%;
+      animation: lp 2s infinite;
+    }
+
+    @keyframes lp { 0%,100%{opacity:1}50%{opacity:0.3} }
+
+    /* ── WRAP ── */
+    .wrap {
+      max-width: 500px; margin: 0 auto;
+      padding: 20px 16px 40px;
+    }
+
+    /* ── STEP BAR ── */
+    .steps-bar {
+      display: flex; gap: 5px;
+      margin-bottom: 10px;
+    }
+
+    .step-seg {
+      flex: 1; height: 4px;
+      background: var(--border);
+      border-radius: 100px;
+      transition: background 0.4s;
+    }
+
+    .step-seg.done { background: var(--primary); }
+    .step-seg.active { background: var(--primary); opacity: 0.6; }
+
+    .step-labels {
+      display: flex; margin-bottom: 22px;
+    }
+
+    .step-lbl {
+      flex: 1; text-align: center;
+      font-size: 12px; font-weight: 600;
+      color: var(--dim);
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+
+    .step-lbl.active { color: var(--primary); }
+    .step-lbl.done { color: var(--success); }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r); padding: 22px 20px;
+      margin-bottom: 14px;
+      position: relative; overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+    }
+
+    .card-ttl {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px; font-weight: 800;
+      color: var(--text); margin-bottom: 18px;
+      letter-spacing: -0.02em;
+    }
+
+    /* ── SERVIÇOS ── */
+    .svc-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    }
+
+    .svc-card {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      border-radius: var(--r-sm); padding: 18px 14px;
+      cursor: pointer; text-align: center;
+      transition: all 0.2s; position: relative; overflow: hidden;
+    }
+
+    .svc-card.selected {
+      border-color: var(--primary);
+      background: rgba(155,35,53,0.1);
+      box-shadow: 0 0 0 1px var(--primary), 0 6px 24px rgba(0,0,0,0.25);
+    }
+
+    .svc-card:active { transform: scale(0.96); }
+
+    .svc-check {
+      position: absolute; top: 9px; right: 9px;
+      width: 20px; height: 20px;
+      background: var(--primary); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; color: white;
+      opacity: 0; transform: scale(0);
+      transition: all 0.2s;
+    }
+
+    .svc-card.selected .svc-check { opacity: 1; transform: scale(1); }
+
+    .svc-icon { font-size: 34px; margin-bottom: 10px; }
+
+    .svc-name {
+      font-size: 15px; font-weight: 700;
+      color: var(--text); margin-bottom: 5px;
+      line-height: 1.3;
+    }
+
+    .svc-dur {
+      font-size: 13px; color: var(--muted-2); margin-bottom: 8px;
+    }
+
+    .svc-price {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px; font-weight: 800;
+      color: var(--primary);
+    }
+
+    /* ── CALENDÁRIO ── */
+    .cal-nav-row {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 18px;
+    }
+
+    .cal-month {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px; font-weight: 800;
+      color: var(--text); letter-spacing: -0.02em;
+    }
+
+    .cal-arrow {
+      width: 40px; height: 40px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-2);
+      border-radius: 12px; cursor: pointer;
+      font-size: 20px; color: var(--muted);
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .cal-arrow:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+    .cal-arrow:disabled { opacity: 0.2; cursor: not-allowed; }
+
+    .cal-days-hdr {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      margin-bottom: 8px; gap: 3px;
+    }
+
+    .cal-dh {
+      text-align: center; font-size: 13px; font-weight: 700;
+      color: var(--muted-2); padding: 4px 0;
+      letter-spacing: 0.02em;
+    }
+
+    .cal-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .cal-day {
+      aspect-ratio: 1;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 600;
+      border-radius: 10px; cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+      color: var(--text);
+      min-height: 40px;
+    }
+
+    .cal-day:active:not(.dis):not(.blank) { transform: scale(0.85); }
+
+    .cal-day.blank { cursor: default; }
+
+    .cal-day.dis {
+      color: var(--dim); opacity: 0.4; cursor: not-allowed;
+    }
+
+    .cal-day.today {
+      border-color: var(--primary);
+      color: var(--primary); font-weight: 800;
+      background: rgba(155,35,53,0.06);
+    }
+
+    .cal-day.sel {
+      background: var(--primary);
+      color: #fff; border-color: var(--primary);
+      font-weight: 800;
+      box-shadow: 0 4px 16px rgba(155,35,53,0.5);
+    }
+
+    .cal-day:not(.dis):not(.blank):not(.sel):hover {
+      background: var(--surface-2);
+    }
+
+    .cal-selected-lbl {
+      text-align: center; margin-top: 16px;
+      font-size: 15px; font-weight: 600;
+      color: var(--muted-2);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px;
+      min-height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .cal-selected-lbl.has-date {
+      color: var(--primary);
+      background: rgba(155,35,53,0.06);
+      border-color: rgba(155,35,53,0.2);
+    }
+
+    /* ── HORÁRIOS ── */
+    .times-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .time-pill {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      border-radius: 12px; padding: 14px 4px;
+      cursor: pointer; text-align: center;
+      font-size: 15px; font-weight: 700;
+      color: var(--text);
+      transition: all 0.2s;
+      line-height: 1.2;
+    }
+
+    .time-pill:active:not(.occ) { transform: scale(0.92); }
+
+    .time-pill.sel {
+      background: var(--primary);
+      color: white; border-color: var(--primary);
+      box-shadow: 0 4px 18px rgba(155,35,53,0.45);
+    }
+
+    .time-pill.occ {
+      color: var(--dim); border-color: var(--border);
+      cursor: not-allowed; opacity: 0.4;
+      font-size: 13px;
+    }
+
+    /* ── FORMULÁRIO ── */
+    .fgroup { margin-bottom: 18px; }
+
+    .flabel {
+      display: block; font-size: 13px; font-weight: 700;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      color: var(--muted-2); margin-bottom: 9px;
+    }
+
+    .finput {
+      width: 100%; padding: 16px 18px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-2);
+      border-radius: var(--r-sm); color: var(--text);
+      font-size: 17px; outline: none;
+      -webkit-appearance: none; transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .finput::placeholder { color: var(--dim); }
+
+    .finput:focus {
+      border-color: var(--primary);
+      background: rgba(155,35,53,0.06);
+      box-shadow: 0 0 0 3px rgba(155,35,53,0.14);
+    }
+
+    /* ── RESUMO ── */
+    .summary {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm); overflow: hidden;
+      margin-bottom: 4px;
+    }
+
+    .sum-row {
+      display: flex; justify-content: space-between;
+      align-items: center; padding: 14px 18px;
+    }
+
+    .sum-row:not(:last-child) { border-bottom: 1px solid var(--border); }
+
+    .sum-lbl { font-size: 14px; color: var(--muted-2); }
+
+    .sum-val {
+      font-size: 15px; font-weight: 700; color: var(--text);
+      text-align: right; max-width: 60%;
+    }
+
+    /* ── BOTÕES ── */
+    .btn-main {
+      width: 100%; padding: 18px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white; border: none;
+      border-radius: var(--r-sm); font-size: 16px; font-weight: 700;
+      cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: all 0.25s; letter-spacing: 0.01em;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.06) inset;
+    }
+
+    .btn-main:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .btn-main:not(:disabled):hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 36px rgba(0,0,0,0.4);
+    }
+
+    .btn-main:not(:disabled):active { transform: translateY(0); }
+
+    .btn-back {
+      padding: 18px 20px;
+      background: var(--surface);
+      color: var(--muted); border: 1px solid var(--border-2);
+      border-radius: var(--r-sm); font-size: 15px; font-weight: 600;
+      cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: all 0.2s; white-space: nowrap;
+    }
+
+    .btn-back:hover { background: var(--surface-2); color: var(--text); }
+
+    .nav-row { display: flex; gap: 10px; }
+    .nav-row .btn-main { flex: 1; }
+
+    /* ── SUCESSO ── */
+    .success-wrap { text-align: center; padding: 10px 0 28px; }
+
+    .success-anim {
+      width: 88px; height: 88px;
+      background: linear-gradient(135deg, rgba(16,185,129,0.18), rgba(16,185,129,0.06));
+      border: 1px solid rgba(16,185,129,0.3);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 40px; margin: 0 auto 24px;
+      animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+
+    @keyframes popIn { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+
+    .success-ttl {
+      font-family: 'Syne', sans-serif;
+      font-size: 30px; font-weight: 800;
+      color: var(--text); margin-bottom: 8px;
+      letter-spacing: -0.03em;
+    }
+
+    .success-sub {
+      font-size: 15px; color: var(--muted-2); margin-bottom: 26px;
+    }
+
+    .code-box {
+      background: rgba(255,255,255,0.04);
+      border: 1px dashed rgba(255,255,255,0.15);
+      border-radius: var(--r-sm); padding: 18px;
+      margin-bottom: 22px;
+    }
+
+    .code-lbl {
+      font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--muted-2); margin-bottom: 10px;
+    }
+
+    .code-val {
+      font-family: 'Syne', sans-serif;
+      font-size: 34px; font-weight: 800;
+      color: var(--primary); letter-spacing: 8px;
+    }
+
+    .btn-new {
+      width: 100%; padding: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border-2);
+      color: var(--muted); border-radius: var(--r-sm);
+      font-size: 15px; font-weight: 600; cursor: pointer;
+      font-family: 'Inter', sans-serif; transition: all 0.2s;
+      margin-top: 12px;
+    }
+
+    .btn-new:hover { background: var(--surface-2); color: var(--text); }
+
+    /* ── LOADING ── */
+    #loading-screen {
+      text-align: center; padding: 100px 20px;
+      color: var(--muted-2); font-size: 15px;
+    }
+
+    .spinner {
+      width: 40px; height: 40px;
+      border: 2px solid var(--border-2);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 18px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .slide-in { animation: slideUp 0.3s cubic-bezier(0.22,1,0.36,1) both; }
+
+    /* ── INSTALL BANNER ── */
+    .install-banner {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 200;
+      background: rgba(7,9,15,0.97);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border-top: 1px solid var(--border-2);
+      padding: 16px 20px 20px;
+      display: flex; align-items: center; gap: 14px;
+      transform: translateY(110%);
+      transition: transform 0.45s cubic-bezier(0.22,1,0.36,1);
+      box-shadow: 0 -8px 40px rgba(0,0,0,0.5);
+    }
+
+    .install-banner.visible { transform: translateY(0); }
+
+    .install-icon {
+      width: 46px; height: 46px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+
+    .install-text { flex: 1; min-width: 0; }
+
+    .install-title {
+      font-size: 14px; font-weight: 700;
+      color: var(--text); line-height: 1.3;
+    }
+
+    .install-sub {
+      font-size: 12px; color: var(--muted-2);
+      margin-top: 2px;
+    }
+
+    .install-btn {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white; border: none;
+      padding: 10px 18px; border-radius: 10px;
+      font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: 'Inter', sans-serif;
+      white-space: nowrap; flex-shrink: 0;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+      transition: all 0.2s;
+    }
+
+    .install-btn:active { transform: scale(0.96); }
+
+    .install-close {
+      background: var(--surface);
+      border: 1px solid var(--border-2);
+      color: var(--muted-2); padding: 8px 10px;
+      border-radius: 8px; cursor: pointer;
+      font-size: 14px; line-height: 1; flex-shrink: 0;
+      font-family: 'Inter', sans-serif; transition: all 0.2s;
+    }
+
+    .install-close:hover { color: var(--text); background: var(--surface-2); }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#cc3300">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AgendaPro">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js');
+      });
+    }
+  </script>
+</head>
+<body>
+
+<!-- INSTALL BANNER -->
+<div class="install-banner" id="install-banner" role="complementary" aria-label="Instalar aplicativo">
+  <div class="install-icon" id="install-icon">✂️</div>
+  <div class="install-text">
+    <div class="install-title">Instale o AgendaPro</div>
+    <div class="install-sub">Acesse sua agenda com um toque</div>
+  </div>
+  <button class="install-btn" onclick="doInstall()">Instalar</button>
+  <button class="install-close" onclick="dismissInstall()" aria-label="Fechar">✕</button>
+</div>
+
+<header class="app-header">
+  <div class="header-logo" id="header-icon">✂️</div>
+  <div class="header-info">
+    <div class="header-name" id="header-name">AgendaPro</div>
+    <div class="header-sub">Agendamento Online</div>
+  </div>
+  <span class="online-badge"><span class="live-dot"></span>Online</span>
+</header>
+
+<div id="loading-screen">
+  <div class="spinner"></div>
+  Carregando...
+</div>
+
+<div id="main-app" class="hidden">
+  <div class="wrap">
+
+    <div class="steps-bar" id="steps-bar">
+      <div class="step-seg active" id="seg1"></div>
+      <div class="step-seg" id="seg2"></div>
+      <div class="step-seg" id="seg3"></div>
+      <div class="step-seg" id="seg4"></div>
+    </div>
+
+    <div class="step-labels">
+      <div class="step-lbl active" id="lbl1">Serviço</div>
+      <div class="step-lbl" id="lbl2">Data</div>
+      <div class="step-lbl" id="lbl3">Horário</div>
+      <div class="step-lbl" id="lbl4">Dados</div>
+    </div>
+
+    <!-- STEP 1 -->
+    <div id="step1" class="slide-in">
+      <div class="card">
+        <div class="card-ttl">Qual serviço você quer?</div>
+        <div class="svc-grid" id="services-grid"></div>
+      </div>
+      <button class="btn-main" id="btn-s1" onclick="goStep(2)" disabled>Próximo →</button>
+    </div>
+
+    <!-- STEP 2 -->
+    <div id="step2" class="hidden">
+      <div class="card">
+        <div class="card-ttl">Escolha uma data</div>
+        <div class="cal-nav-row">
+          <button class="cal-arrow" id="btn-prev" onclick="changeMonth(-1)">‹</button>
+          <span class="cal-month" id="cal-title"></span>
+          <button class="cal-arrow" onclick="changeMonth(1)">›</button>
+        </div>
+        <div class="cal-days-hdr">
+          <div class="cal-dh">Dom</div>
+          <div class="cal-dh">Seg</div>
+          <div class="cal-dh">Ter</div>
+          <div class="cal-dh">Qua</div>
+          <div class="cal-dh">Qui</div>
+          <div class="cal-dh">Sex</div>
+          <div class="cal-dh">Sáb</div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="cal-selected-lbl" id="date-label">Toque em um dia para selecionar</div>
+      </div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="goStep(1)">← Voltar</button>
+        <button class="btn-main" id="btn-s2" onclick="goStep(3)" disabled>Próximo →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div id="step3" class="hidden">
+      <div class="card">
+        <div class="card-ttl">Escolha um horário</div>
+        <div class="times-grid" id="times-grid"></div>
+      </div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="goStep(2)">← Voltar</button>
+        <button class="btn-main" id="btn-s3" onclick="goStep(4)" disabled>Próximo →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div id="step4" class="hidden">
+      <div class="card">
+        <div class="card-ttl">Seus dados</div>
+        <div class="fgroup">
+          <label class="flabel">Nome completo</label>
+          <input type="text" class="finput" id="client-name" placeholder="Ex: Maria Silva" oninput="validateForm()" autocomplete="name">
+        </div>
+        <div class="fgroup">
+          <label class="flabel">WhatsApp (com DDD)</label>
+          <input type="tel" class="finput" id="client-phone" placeholder="Ex: 73999999999" oninput="validateForm()" autocomplete="tel">
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-ttl">Resumo</div>
+        <div class="summary">
+          <div class="sum-row"><span class="sum-lbl">Serviço</span><span class="sum-val" id="sum-service"></span></div>
+          <div class="sum-row"><span class="sum-lbl">Data</span><span class="sum-val" id="sum-date"></span></div>
+          <div class="sum-row"><span class="sum-lbl">Horário</span><span class="sum-val" id="sum-time"></span></div>
+          <div class="sum-row"><span class="sum-lbl">Valor</span><span class="sum-val" id="sum-price"></span></div>
+        </div>
+      </div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="goStep(3)">← Voltar</button>
+        <button class="btn-main" id="btn-confirm" onclick="confirmBooking()" disabled>Confirmar →</button>
+      </div>
+    </div>
+
+    <!-- SUCESSO -->
+    <div id="success-screen" class="hidden slide-in">
+      <div class="card">
+        <div class="success-wrap">
+          <div class="success-anim">🎉</div>
+          <div class="success-ttl">Agendado!</div>
+          <div class="success-sub">Seu horário está confirmado</div>
+          <div class="code-box">
+            <div class="code-lbl">Código do agendamento</div>
+            <div class="code-val" id="booking-code">---</div>
+          </div>
+          <div class="summary">
+            <div class="sum-row"><span class="sum-lbl">Serviço</span><span class="sum-val" id="conf-service"></span></div>
+            <div class="sum-row"><span class="sum-lbl">Data</span><span class="sum-val" id="conf-date"></span></div>
+            <div class="sum-row"><span class="sum-lbl">Horário</span><span class="sum-val" id="conf-time"></span></div>
+            <div class="sum-row"><span class="sum-lbl">Valor</span><span class="sum-val" id="conf-price"></span></div>
+          </div>
+          <button class="btn-new" onclick="newBooking()">+ Novo Agendamento</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://zigghtvlmftgjlohuhla.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_o5ibiwWTvnZ8gXfdJQkFqA_jKZhTiGU';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DAYS_SHORT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const MONTHS_SHORT = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+
+let config = {
+  salonName: 'AgendaPro',
+  startTime: '08:00', endTime: '18:00',
+  lunchStart: '12:00', lunchEnd: '13:00',
+  interval: 30,
+  services: [
+    { name: 'Corte Feminino', icon: '✂️', duration: 60, price: 60 },
+    { name: 'Corte Masculino', icon: '💈', duration: 45, price: 45 },
+    { name: 'Escova', icon: '💨', duration: 60, price: 55 },
+    { name: 'Coloração', icon: '🎨', duration: 120, price: 150 },
+    { name: 'Manicure', icon: '💅', duration: 60, price: 35 },
+    { name: 'Sobrancelha', icon: '👁️', duration: 30, price: 25 },
+  ]
+};
+
+let sel = { service: null, date: null, time: null };
+let timeSlots = [], calYear, calMonth;
+
+function generateSlots() {
+  const toMins = t => { const [h,m] = t.split(':').map(Number); return h*60+m; };
+  const toStr = m => `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
+  const start = toMins(config.startTime), end = toMins(config.endTime);
+  const ls = toMins(config.lunchStart), le = toMins(config.lunchEnd);
+  const iv = parseInt(config.interval) || 30;
+  const slots = [];
+  for (let m = start; m < end; m += iv) {
+    if (m < ls || m >= le) slots.push(toStr(m));
+  }
+  return slots;
+}
+
+async function loadConfig() {
+  try {
+    const { data } = await db.from('settings').select('value').eq('key','config').single();
+    if (data && data.value) config = { ...config, ...JSON.parse(data.value) };
+  } catch(e) {}
+  if (config.primaryColor) {
+    document.documentElement.style.setProperty('--primary', config.primaryColor);
+    document.documentElement.style.setProperty('--secondary', config.secondaryColor || config.primaryColor);
+  }
+  document.getElementById('header-name').textContent = config.salonName;
+  const installIcon = document.getElementById('install-icon');
+  if (installIcon && config.services && config.services[0]) {
+    installIcon.textContent = config.services[0].icon || '✂️';
+  }
+  timeSlots = generateSlots();
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('main-app').classList.remove('hidden');
+  renderServices();
+  const now = new Date();
+  calYear = now.getFullYear(); calMonth = now.getMonth();
+  renderCalendar();
+}
+
+function renderServices() {
+  document.getElementById('services-grid').innerHTML = config.services.map((s,i) => `
+    <div class="svc-card" onclick="selectService(${i})" id="srv-${i}">
+      <div class="svc-check">✓</div>
+      <div class="svc-icon">${s.icon || '✂️'}</div>
+      <div class="svc-name">${s.name}</div>
+      <div class="svc-dur">${s.duration} min</div>
+      <div class="svc-price">R$ ${s.price}</div>
+    </div>`).join('');
+}
+
+function selectService(i) {
+  sel.service = config.services[i];
+  document.querySelectorAll('.svc-card').forEach(b => b.classList.remove('selected'));
+  document.getElementById('srv-'+i).classList.add('selected');
+  document.getElementById('btn-s1').disabled = false;
+}
+
+function changeMonth(offset) {
+  calMonth += offset;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayStr = today.toISOString().split('T')[0];
+  const isCurrentMonth = calYear === today.getFullYear() && calMonth === today.getMonth();
+  document.getElementById('btn-prev').disabled = isCurrentMonth;
+  document.getElementById('cal-title').textContent = `${MONTH_NAMES[calMonth]} ${calYear}`;
+
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+
+  let html = '';
+  for (let i = 0; i < firstDay; i++) html += `<div class="cal-day blank"></div>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayDate = new Date(calYear, calMonth, d);
+    const isPast = dayDate < today;
+    const isToday = ds === todayStr;
+    const isSelected = ds === sel.date;
+    let cls = 'cal-day';
+    if (isPast) cls += ' dis';
+    else if (isSelected) cls += ' sel';
+    else if (isToday) cls += ' today';
+    html += `<div class="${cls}" ${!isPast ? `onclick="pickDay('${ds}',this)"` : ''}>${d}</div>`;
+  }
+
+  document.getElementById('cal-grid').innerHTML = html;
+  const lbl = document.getElementById('date-label');
+  if (sel.date) {
+    lbl.textContent = '✓  ' + formatDateShort(sel.date);
+    lbl.classList.add('has-date');
+  } else {
+    lbl.textContent = 'Toque em um dia para selecionar';
+    lbl.classList.remove('has-date');
+  }
+}
+
+function pickDay(ds, el) {
+  sel.date = ds;
+  document.querySelectorAll('.cal-day').forEach(d => {
+    d.classList.remove('sel');
+    if (!d.classList.contains('today') && !d.classList.contains('dis')) {
+      d.classList.remove('today');
+    }
+  });
+  el.classList.remove('today');
+  el.classList.add('sel');
+  const lbl = document.getElementById('date-label');
+  lbl.textContent = '✓  ' + formatDateShort(ds);
+  lbl.classList.add('has-date');
+  document.getElementById('btn-s2').disabled = false;
+}
+
+function formatDateShort(ds) {
+  const d = new Date(ds + 'T12:00:00');
+  return `${DAYS_SHORT[d.getDay()]}, ${d.getDate()} de ${MONTHS_SHORT[d.getMonth()]}`;
+}
+
+async function renderTimes() {
+  const grid = document.getElementById('times-grid');
+  grid.innerHTML = `<p style="color:var(--muted-2);font-size:14px;grid-column:span 4;text-align:center;padding:16px">Carregando horários...</p>`;
+  let booked = [];
+  try {
+    const { data } = await db.from('bookings').select('booking_time')
+      .eq('booking_date', sel.date).eq('status','agendado');
+    if (data) booked = data.map(b => b.booking_time);
+  } catch(e) {}
+  grid.innerHTML = timeSlots.map(h => {
+    const occ = booked.includes(h);
+    return `<button class="time-pill ${occ ? 'occ' : ''}" ${occ ? 'disabled' : `onclick="pickTime('${h}',this)"`}>${occ ? h + '<br><small style="font-size:11px;opacity:0.7">Ocupado</small>' : h}</button>`;
+  }).join('');
+}
+
+function pickTime(t, el) {
+  sel.time = t;
+  document.querySelectorAll('.time-pill').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('btn-s3').disabled = false;
+}
+
+function updateStepsBar(currentStep) {
+  [1,2,3,4].forEach(i => {
+    const seg = document.getElementById('seg'+i);
+    const lbl = document.getElementById('lbl'+i);
+    seg.className = 'step-seg';
+    lbl.className = 'step-lbl';
+    if (i < currentStep) { seg.classList.add('done'); lbl.classList.add('done'); }
+    else if (i === currentStep) { seg.classList.add('active'); lbl.classList.add('active'); }
+  });
+}
+
+function goStep(step) {
+  [1,2,3,4].forEach(i => document.getElementById('step'+i).classList.add('hidden'));
+  document.getElementById('success-screen').classList.add('hidden');
+  const el = document.getElementById('step'+step);
+  el.classList.remove('hidden');
+  el.classList.remove('slide-in');
+  void el.offsetWidth;
+  el.classList.add('slide-in');
+  updateStepsBar(step);
+  if (step === 3) renderTimes();
+  if (step === 4) updateSummary();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateSummary() {
+  document.getElementById('sum-service').textContent = sel.service.name;
+  document.getElementById('sum-date').textContent = formatDateShort(sel.date);
+  document.getElementById('sum-time').textContent = sel.time;
+  document.getElementById('sum-price').textContent = `R$ ${sel.service.price}`;
+}
+
+function validateForm() {
+  const n = document.getElementById('client-name').value.trim();
+  const p = document.getElementById('client-phone').value.trim();
+  document.getElementById('btn-confirm').disabled = !(n.length >= 3 && p.length >= 10);
+}
+
+async function confirmBooking() {
+  const btn = document.getElementById('btn-confirm');
+  btn.disabled = true; btn.textContent = 'Confirmando...';
+  const name = document.getElementById('client-name').value.trim();
+  const phone = document.getElementById('client-phone').value.trim();
+  try {
+    const { data } = await db.from('bookings').select('id')
+      .eq('booking_date', sel.date).eq('booking_time', sel.time).eq('status','agendado');
+    if (data && data.length > 0) {
+      alert('Este horário acabou de ser ocupado! Escolha outro.');
+      btn.disabled = false; btn.textContent = 'Confirmar →';
+      goStep(3); return;
+    }
+  } catch(e) {}
+  const code = Math.random().toString(36).substr(2,6).toUpperCase();
+  try {
+    const { error } = await db.from('bookings').insert({
+      client_name: name, client_phone: phone,
+      service: sel.service.name, service_duration: sel.service.duration,
+      service_price: sel.service.price,
+      booking_date: sel.date, booking_time: sel.time,
+      status: 'agendado', code
+    });
+    if (error) throw error;
+    document.getElementById('booking-code').textContent = code;
+    document.getElementById('conf-service').textContent = sel.service.name;
+    document.getElementById('conf-date').textContent = formatDateShort(sel.date);
+    document.getElementById('conf-time').textContent = sel.time;
+    document.getElementById('conf-price').textContent = `R$ ${sel.service.price}`;
+    [1,2,3,4].forEach(i => document.getElementById('step'+i).classList.add('hidden'));
+    const ss = document.getElementById('success-screen');
+    ss.classList.remove('hidden');
+    ss.classList.remove('slide-in');
+    void ss.offsetWidth;
+    ss.classList.add('slide-in');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch(e) {
+    alert('Erro: ' + (e.message || 'Tente novamente'));
+    btn.disabled = false; btn.textContent = 'Confirmar →';
+  }
+}
+
+function newBooking() {
+  sel = { service: null, date: null, time: null };
+  document.getElementById('client-name').value = '';
+  document.getElementById('client-phone').value = '';
+  document.getElementById('success-screen').classList.add('hidden');
+  renderServices();
+  const now = new Date(); calYear = now.getFullYear(); calMonth = now.getMonth();
+  renderCalendar();
+  goStep(1);
+}
+
+// ── INSTALL PROMPT ──
+let _deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredPrompt = e;
+  if (!localStorage.getItem('pwa-dismissed')) {
+    setTimeout(() => {
+      document.getElementById('install-banner').classList.add('visible');
+    }, 3500);
+  }
+});
+
+function doInstall() {
+  if (!_deferredPrompt) return;
+  _deferredPrompt.prompt();
+  _deferredPrompt.userChoice.then(() => {
+    _deferredPrompt = null;
+    dismissInstall();
+  });
+}
+
+function dismissInstall() {
+  document.getElementById('install-banner').classList.remove('visible');
+  localStorage.setItem('pwa-dismissed', '1');
+}
+
+window.addEventListener('appinstalled', () => {
+  dismissInstall();
+});
+
+loadConfig();
+</script>
+</body>
+</html>

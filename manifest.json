@@ -1,0 +1,55 @@
+{
+  "name": "AgendaPro",
+  "short_name": "AgendaPro",
+  "description": "Agendamento Inteligente para Salões",
+  "start_url": "./salao_agendamento.html?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#07090F",
+  "theme_color": "#9b2335",
+  "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "categories": ["business", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Fazer Agendamento",
+      "short_name": "Agendar",
+      "description": "Agendar um serviço no salão",
+      "url": "./salao_agendamento.html?source=shortcut",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Painel Administrativo",
+      "short_name": "Admin",
+      "description": "Acessar o painel de gestão",
+      "url": "./salao_admin.html?source=shortcut",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
