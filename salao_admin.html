@@ -191,8 +191,8 @@
       background: rgba(16,185,129,0.08);
       border: 1px solid rgba(16,185,129,0.18);
       color: var(--success);
-      padding: 4px 10px; border-radius: 100px;
-      font-size: 11px; font-weight: 600; letter-spacing: 0.03em;
+      padding: 5px 11px; border-radius: 100px;
+      font-size: 12px; font-weight: 600;
     }
 
     .live-dot {
@@ -209,8 +209,8 @@
     .btn-icon {
       background: var(--surface);
       border: 1px solid var(--border-2);
-      color: var(--muted); padding: 6px 13px;
-      border-radius: 8px; font-size: 12px; font-weight: 500;
+      color: var(--muted); padding: 7px 14px;
+      border-radius: 8px; font-size: 14px; font-weight: 500;
       cursor: pointer; font-family: 'Inter', sans-serif;
       transition: all 0.2s;
     }
@@ -229,13 +229,12 @@
 
     .nav-tab {
       flex: 1; min-width: 0;
-      padding: 13px 6px; text-align: center;
-      font-size: 11px; font-weight: 600;
+      padding: 14px 6px; text-align: center;
+      font-size: 14px; font-weight: 600;
       color: var(--muted-2);
       border-bottom: 2px solid transparent;
       cursor: pointer; white-space: nowrap;
-      transition: all 0.2s; letter-spacing: 0.03em;
-      text-transform: uppercase;
+      transition: all 0.2s;
     }
 
     .nav-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
@@ -261,35 +260,33 @@
       transition: border-color 0.2s;
     }
 
-    .stat::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(99,102,241,0.35), transparent);
-    }
+    .stat::before { display: none; }
 
     .stat-lbl {
-      font-size: 10px; font-weight: 700;
-      letter-spacing: 0.1em; text-transform: uppercase;
+      font-size: 12px; font-weight: 600;
+      letter-spacing: 0.04em; text-transform: uppercase;
       color: var(--muted-2); margin-bottom: 8px;
     }
 
     .stat-num {
       font-family: 'Syne', sans-serif;
-      font-size: 30px; font-weight: 800;
-      color: var(--text); line-height: 1;
+      font-size: 28px; font-weight: 800;
+      color: #CBD5E1; line-height: 1;
       letter-spacing: -0.03em;
     }
 
     .stat-num.accent {
-      background: linear-gradient(135deg, var(--blue), var(--indigo));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
+      background: none;
+      -webkit-background-clip: initial; background-clip: initial;
+      -webkit-text-fill-color: #818CF8;
+      color: #818CF8;
     }
 
     .stat-num.green {
-      background: linear-gradient(135deg, #10B981, #34D399);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
+      background: none;
+      -webkit-background-clip: initial; background-clip: initial;
+      -webkit-text-fill-color: #34D399;
+      color: #34D399;
     }
 
     /* ACTIONS */
@@ -321,8 +318,8 @@
 
     /* SECTION HDR */
     .sec-hdr {
-      font-size: 10px; font-weight: 700;
-      letter-spacing: 0.1em; text-transform: uppercase;
+      font-size: 12px; font-weight: 600;
+      letter-spacing: 0.04em; text-transform: uppercase;
       color: var(--muted-2); margin: 20px 0 12px;
       display: flex; align-items: center; gap: 10px;
     }
@@ -351,24 +348,24 @@
 
     .bk-date-tag {
       display: inline-flex; align-items: center; gap: 4px;
-      font-size: 10px; font-weight: 600; letter-spacing: 0.03em;
+      font-size: 12px; font-weight: 600; letter-spacing: 0.01em;
       color: var(--blue);
       background: rgba(59,130,246,0.08);
       border: 1px solid rgba(59,130,246,0.15);
-      padding: 3px 9px; border-radius: 100px; margin-bottom: 10px;
+      padding: 4px 10px; border-radius: 100px; margin-bottom: 10px;
     }
 
     .bk-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 
-    .bk-name { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
-    .bk-svc { font-size: 12px; color: var(--muted); margin-bottom: 3px; }
-    .bk-phone { font-size: 12px; color: var(--muted-2); }
+    .bk-name { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+    .bk-svc { font-size: 14px; color: var(--muted); margin-bottom: 4px; }
+    .bk-phone { font-size: 14px; color: var(--muted-2); }
 
     .bk-time {
       font-family: 'Syne', sans-serif;
-      font-size: 22px; font-weight: 800;
-      color: var(--text); white-space: nowrap;
-      letter-spacing: -0.03em;
+      font-size: 20px; font-weight: 700;
+      color: #CBD5E1; white-space: nowrap;
+      letter-spacing: -0.02em;
     }
 
     .bk-foot {
@@ -379,8 +376,8 @@
 
     .chip {
       display: inline-flex; align-items: center; gap: 4px;
-      padding: 4px 10px; border-radius: 100px;
-      font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
+      padding: 5px 11px; border-radius: 100px;
+      font-size: 13px; font-weight: 600;
     }
 
     .chip-blue { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); color: var(--blue); }
@@ -390,9 +387,9 @@
     .bk-btns { display: flex; gap: 6px; }
 
     .sm-btn {
-      padding: 5px 11px; border-radius: 8px;
+      padding: 7px 13px; border-radius: 8px;
       border: 1px solid var(--border-2);
-      background: var(--surface); font-size: 11px; font-weight: 600;
+      background: var(--surface); font-size: 13px; font-weight: 600;
       cursor: pointer; font-family: 'Inter', sans-serif;
       color: var(--muted); transition: all 0.2s;
     }
@@ -408,7 +405,7 @@
     /* EMPTY */
     .empty { text-align: center; padding: 44px 20px; }
     .empty-ico { font-size: 36px; margin-bottom: 10px; opacity: 0.35; }
-    .empty-msg { font-size: 13px; color: var(--muted-2); }
+    .empty-msg { font-size: 15px; color: var(--muted-2); }
 
     /* FILTERS */
     .filters {
@@ -419,9 +416,9 @@
     .filters::-webkit-scrollbar { display: none; }
 
     .fpill {
-      padding: 6px 14px; border-radius: 100px;
+      padding: 8px 16px; border-radius: 100px;
       border: 1px solid var(--border);
-      background: transparent; font-size: 12px; font-weight: 600;
+      background: transparent; font-size: 14px; font-weight: 600;
       color: var(--muted-2); cursor: pointer; white-space: nowrap;
       transition: all 0.2s; font-family: 'Inter', sans-serif;
     }
@@ -440,14 +437,10 @@
       margin-bottom: 12px; position: relative; overflow: hidden;
     }
 
-    .cfg-block::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(99,102,241,0.3), transparent);
-    }
+    .cfg-block::before { display: none; }
 
     .cfg-ttl {
-      font-size: 13px; font-weight: 700; color: var(--text);
+      font-size: 15px; font-weight: 700; color: var(--text);
       margin-bottom: 18px;
       display: flex; align-items: center; gap: 9px;
     }
@@ -464,8 +457,8 @@
     .fgroup { margin-bottom: 14px; }
 
     .flabel {
-      display: block; font-size: 10px; font-weight: 700;
-      letter-spacing: 0.08em; text-transform: uppercase;
+      display: block; font-size: 12px; font-weight: 700;
+      letter-spacing: 0.04em; text-transform: uppercase;
       color: var(--muted-2); margin-bottom: 8px;
     }
 
@@ -500,7 +493,7 @@
     .svc-row input {
       flex: 1; background: transparent; border: none;
       border-bottom: 1px solid var(--border);
-      color: var(--text); font-size: 13px;
+      color: var(--text); font-size: 15px;
       padding: 4px 2px; outline: none;
       font-family: 'Inter', sans-serif;
     }
@@ -512,19 +505,19 @@
       background: rgba(239,68,68,0.08);
       border: 1px solid rgba(239,68,68,0.18);
       color: var(--error); border-radius: 6px;
-      padding: 4px 9px; cursor: pointer;
-      font-size: 11px; font-family: 'Inter', sans-serif;
+      padding: 6px 11px; cursor: pointer;
+      font-size: 13px; font-family: 'Inter', sans-serif;
       transition: all 0.2s;
     }
 
     .rm-btn:hover { background: rgba(239,68,68,0.15); }
 
     .add-svc-btn {
-      width: 100%; padding: 11px;
+      width: 100%; padding: 13px;
       background: rgba(255,255,255,0.03);
       border: 1px dashed var(--border-2);
       border-radius: var(--r-sm); color: var(--muted-2);
-      font-size: 13px; font-weight: 600; cursor: pointer;
+      font-size: 15px; font-weight: 600; cursor: pointer;
       font-family: 'Inter', sans-serif; transition: all 0.2s;
       margin-top: 4px;
     }
