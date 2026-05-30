@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AgendaPro — Painel</title>
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="manifest-admin.json">
   <meta name="theme-color" content="#6366F1">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="AgendaPro">
-  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-title" content="AGENDAPRO">
+  <link rel="apple-touch-icon" href="icon-admin-192.png">
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js');
@@ -592,9 +592,65 @@
     }
 
     .sep { height: 1px; background: var(--border); margin: 16px 0; }
+
+    /* ── INSTALL BANNER (admin) ── */
+    .install-banner {
+      position: fixed;
+      bottom: 0; left: 0; right: 0; z-index: 300;
+      background: rgba(6,8,15,0.97);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border-top: 1px solid rgba(99,102,241,0.25);
+      padding: 16px 20px 20px;
+      display: flex; align-items: center; gap: 14px;
+      transform: translateY(110%);
+      transition: transform 0.45s cubic-bezier(0.22,1,0.36,1);
+      box-shadow: 0 -8px 40px rgba(0,0,0,0.5);
+    }
+    .install-banner.visible { transform: translateY(0); }
+    .install-banner-icon {
+      width: 46px; height: 46px;
+      background: linear-gradient(135deg, var(--indigo), var(--violet));
+      border-radius: 14px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 800;
+      color: white; font-family: 'Syne', sans-serif;
+      box-shadow: 0 4px 16px rgba(99,102,241,0.4);
+    }
+    .install-banner-text { flex: 1; min-width: 0; }
+    .install-banner-title { font-size: 14px; font-weight: 700; color: var(--text); }
+    .install-banner-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .install-banner-btn {
+      background: linear-gradient(135deg, var(--indigo), var(--violet));
+      color: white; border: none; padding: 10px 18px;
+      border-radius: 10px; font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: 'Inter', sans-serif;
+      white-space: nowrap; flex-shrink: 0;
+      box-shadow: 0 4px 14px rgba(99,102,241,0.4);
+      transition: all 0.2s;
+    }
+    .install-banner-btn:active { transform: scale(0.96); }
+    .install-banner-close {
+      background: var(--surface); border: 1px solid var(--border-2);
+      color: var(--muted); padding: 8px 10px; border-radius: 8px;
+      cursor: pointer; font-size: 14px; line-height: 1; flex-shrink: 0;
+      font-family: 'Inter', sans-serif; transition: all 0.2s;
+    }
+    .install-banner-close:hover { color: var(--text); }
   </style>
 </head>
 <body>
+
+<!-- INSTALL BANNER (admin) -->
+<div class="install-banner" id="install-banner">
+  <div class="install-banner-icon">A</div>
+  <div class="install-banner-text">
+    <div class="install-banner-title">Instale o painel AGENDAPRO</div>
+    <div class="install-banner-sub">Gerencie sua agenda como app</div>
+  </div>
+  <button class="install-banner-btn" onclick="doInstall()">Instalar</button>
+  <button class="install-banner-close" onclick="dismissInstall()">✕</button>
+</div>
 
 <!-- LOGIN -->
 <div id="login-screen">
@@ -893,6 +949,9 @@ async function login() {
     loadBookings();
     setupRealtime();
     requestNotificationPermission();
+    // Atalhos PWA: ?tab=agenda | todos | config
+    const tabParam = new URLSearchParams(window.location.search).get('tab');
+    if (tabParam && ['agenda','todos','config'].includes(tabParam)) showTab(tabParam);
   } else {
     document.getElementById('login-error').style.display = 'block';
   }
@@ -1045,6 +1104,35 @@ function openWhatsApp(phone, name, service, time) {
   const msg = encodeURIComponent(`Olá ${name}! Confirmando seu agendamento de ${service} às ${time}. Até logo!`);
   window.open(`https://wa.me/55${phone.replace(/\D/g,'')}?text=${msg}`, '_blank');
 }
+
+// ── INSTALL PROMPT ──
+let _deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredPrompt = e;
+  if (!localStorage.getItem('admin-pwa-dismissed')) {
+    setTimeout(() => {
+      document.getElementById('install-banner').classList.add('visible');
+    }, 4000);
+  }
+});
+
+function doInstall() {
+  if (!_deferredPrompt) return;
+  _deferredPrompt.prompt();
+  _deferredPrompt.userChoice.then(() => {
+    _deferredPrompt = null;
+    dismissInstall();
+  });
+}
+
+function dismissInstall() {
+  document.getElementById('install-banner').classList.remove('visible');
+  localStorage.setItem('admin-pwa-dismissed', '1');
+}
+
+window.addEventListener('appinstalled', () => dismissInstall());
 
 loadConfig();
 </script>

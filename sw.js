@@ -1,11 +1,14 @@
-const CACHE = 'agendapro-v3';
+const CACHE = 'agendapro-v4';
 const STATIC = [
   './index.html',
   './salao_agendamento.html',
   './salao_admin.html',
   './manifest.json',
+  './manifest-admin.json',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './icon-admin-192.png',
+  './icon-admin-512.png'
 ];
 
 // ── INSTALL: pré-cacheia todos os assets estáticos ──

@@ -1,0 +1,55 @@
+{
+  "name": "AGENDAPRO",
+  "short_name": "AGENDAPRO",
+  "description": "Painel Administrativo — AgendaPro",
+  "start_url": "./salao_admin.html?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#06080F",
+  "theme_color": "#6366F1",
+  "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "categories": ["business", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Ver Agenda de Hoje",
+      "short_name": "Agenda",
+      "description": "Agendamentos do dia",
+      "url": "./salao_admin.html?tab=agenda&source=shortcut",
+      "icons": [{ "src": "icon-admin-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Histórico",
+      "short_name": "Histórico",
+      "description": "Todos os agendamentos",
+      "url": "./salao_admin.html?tab=todos&source=shortcut",
+      "icons": [{ "src": "icon-admin-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ],
+  "icons": [
+    {
+      "src": "icon-admin-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-admin-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-admin-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-admin-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
