@@ -1,4 +1,4 @@
-const CACHE = 'agendapro-v5';
+const CACHE = 'agendapro-v6';
 
 // Arquivos HTML — sempre buscados na rede (network-first)
 const HTML_FILES = [
@@ -23,12 +23,13 @@ self.addEventListener('install', e => {
   self.skipWaiting();
 });
 
-// ── ACTIVATE: remove caches de versões anteriores ──
+// ── ACTIVATE: limpa caches antigos e avisa clientes para recarregar ──
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    )
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.matchAll({ type: 'window', includeUncontrolled: true }))
+      .then(clients => clients.forEach(c => c.postMessage({ type: 'SW_UPDATED' })))
   );
   self.clients.claim();
 });
