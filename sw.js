@@ -1,8 +1,14 @@
-const CACHE = 'agendapro-v4';
-const STATIC = [
+const CACHE = 'agendapro-v5';
+
+// Arquivos HTML — sempre buscados na rede (network-first)
+const HTML_FILES = [
   './index.html',
   './salao_agendamento.html',
-  './salao_admin.html',
+  './salao_admin.html'
+];
+
+// Assets estáticos — cacheados (cache-first)
+const ASSETS = [
   './manifest.json',
   './manifest-admin.json',
   './icon-192.png',
@@ -11,9 +17,9 @@ const STATIC = [
   './icon-admin-512.png'
 ];
 
-// ── INSTALL: pré-cacheia todos os assets estáticos ──
+// ── INSTALL: pré-cacheia apenas os assets (HTML vai pela rede) ──
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(STATIC)));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
   self.skipWaiting();
 });
 
@@ -27,24 +33,24 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// ── FETCH: estratégia híbrida ──
+// ── FETCH: estratégia por tipo de recurso ──
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
+  const path = url.pathname;
 
-  // Supabase — sempre rede (dados em tempo real)
+  // Supabase — sempre rede
   if (url.hostname.includes('supabase.co')) {
     e.respondWith(fetch(e.request).catch(() => new Response('', { status: 503 })));
     return;
   }
 
-  // Google Fonts — cache com fallback de rede
+  // Google Fonts — cache-first
   if (url.hostname.includes('fonts.googleapis.com') || url.hostname.includes('fonts.gstatic.com')) {
     e.respondWith(
       caches.match(e.request).then(cached => {
         if (cached) return cached;
         return fetch(e.request).then(res => {
-          if (!res || res.status !== 200) return res;
-          caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+          if (res && res.status === 200) caches.open(CACHE).then(c => c.put(e.request, res.clone()));
           return res;
         });
       })
@@ -52,13 +58,24 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Estáticos — cache first, rede como fallback
+  // Arquivos HTML — network-first, cache como fallback offline
+  const isHtml = HTML_FILES.some(f => path.endsWith(f.replace('./', ''))) || path.endsWith('/');
+  if (isHtml) {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        if (res && res.status === 200) caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+        return res;
+      }).catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // Assets (ícones, manifests) — cache-first
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
       return fetch(e.request).then(res => {
-        if (!res || res.status !== 200 || res.type === 'opaque') return res;
-        caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+        if (res && res.status === 200 && res.type !== 'opaque') caches.open(CACHE).then(c => c.put(e.request, res.clone()));
         return res;
       });
     })
