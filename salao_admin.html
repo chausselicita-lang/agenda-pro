@@ -786,6 +786,18 @@
       </div>
 
       <div class="cfg-block">
+        <div class="cfg-ttl"><div class="cfg-ico">💳</div>Pagamento</div>
+        <div class="fgroup">
+          <label class="flabel">Chave PIX</label>
+          <input type="text" class="finput" id="cfg-pix-key" placeholder="CPF, e-mail, telefone ou chave aleatória">
+        </div>
+        <div class="fgroup">
+          <label class="flabel">Link Cartão (Mercado Pago, PagSeguro, etc)</label>
+          <input type="url" class="finput" id="cfg-card-link" placeholder="https://link.mercadopago.com.br/...">
+        </div>
+      </div>
+
+      <div class="cfg-block">
         <div class="cfg-ttl"><div class="cfg-ico">⚠️</div>Zona de Perigo</div>
         <p style="font-size:12px;color:var(--muted-2);margin-bottom:14px">Apaga todos os agendamentos permanentemente. Ação irreversível.</p>
         <button class="danger-btn" onclick="zerarHistorico()">Zerar Todos os Agendamentos</button>
@@ -813,6 +825,7 @@ let config = {
   startTime: '08:00', endTime: '18:00',
   lunchStart: '12:00', lunchEnd: '13:00',
   interval: 30, primaryColor: '#9b2335', secondaryColor: '#c94070',
+  pixKey: '', cardLink: '',
   services: [
     { name: 'Corte Feminino', icon: '✂️', duration: 60, price: 60 },
     { name: 'Corte Masculino', icon: '💈', duration: 45, price: 45 },
@@ -916,6 +929,8 @@ function applyConfig() {
   applyColors(config.primaryColor || '#9b2335', config.secondaryColor || '#c94070');
   initTimeSelects();
   renderServicesConfig();
+  document.getElementById('cfg-pix-key').value = config.pixKey || '';
+  document.getElementById('cfg-card-link').value = config.cardLink || '';
 }
 
 async function saveConfig() {
@@ -927,6 +942,8 @@ async function saveConfig() {
   config.lunchStart = document.getElementById('cfg-lunch-start').value;
   config.lunchEnd = document.getElementById('cfg-lunch-end').value;
   config.interval = parseInt(document.getElementById('cfg-interval').value);
+  config.pixKey = document.getElementById('cfg-pix-key').value.trim();
+  config.cardLink = document.getElementById('cfg-card-link').value.trim();
   try {
     await db.from('settings').upsert({ key: 'config', value: JSON.stringify(config) });
     document.getElementById('header-salon-name').textContent = config.salonName;
@@ -1040,6 +1057,12 @@ function formatDate(dateStr) {
   return `${DAYS_FULL[d.getDay()]}, ${d.getDate()} de ${MONTHS[d.getMonth()]}`;
 }
 
+function paymentChip(method) {
+  if (method === 'pix') return `<span class="chip chip-green">📱 Pago via PIX</span>`;
+  if (method === 'cartao') return `<span class="chip chip-blue">💳 Pago via Cartão</span>`;
+  return `<span class="chip chip-gray">⏳ Pendente</span>`;
+}
+
 function bookingCard(b, showDate) {
   const statusLabel = b.status === 'agendado' ? 'Agendado' : b.status === 'concluido' ? 'Concluído' : 'Cancelado';
   const chipClass = b.status === 'agendado' ? 'chip-blue' : b.status === 'concluido' ? 'chip-green' : 'chip-gray';
@@ -1055,7 +1078,10 @@ function bookingCard(b, showDate) {
       <div class="bk-time">${b.booking_time}</div>
     </div>
     <div class="bk-foot">
-      <span class="chip ${chipClass}">${statusLabel}</span>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        <span class="chip ${chipClass}">${statusLabel}</span>
+        ${paymentChip(b.payment_method)}
+      </div>
       <div class="bk-btns">
         <button class="sm-btn wpp" onclick="openWhatsApp('${b.client_phone}','${b.client_name}','${b.service}','${b.booking_time}')">WhatsApp</button>
         ${b.status === 'agendado' ? `

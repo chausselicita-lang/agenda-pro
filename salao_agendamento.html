@@ -495,6 +495,100 @@
 
     .hidden { display: none; }
 
+    /* ── PAGAMENTO ── */
+    .pay-amount {
+      text-align: center; padding: 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm); margin-bottom: 16px;
+    }
+
+    .pay-amount-lbl { font-size: 13px; color: var(--muted-2); margin-bottom: 4px; }
+
+    .pay-amount-val {
+      font-family: Georgia, sans-serif;
+      font-size: 30px; font-weight: 700; color: #FFF176;
+    }
+
+    .pay-options { display: flex; flex-direction: column; gap: 10px; }
+
+    .pay-option {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      border-radius: var(--r-sm); padding: 18px 16px;
+      cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; gap: 14px;
+    }
+
+    .pay-option.selected {
+      border-color: var(--primary);
+      background: rgba(155,35,53,0.08);
+      box-shadow: 0 0 0 1px var(--primary);
+    }
+
+    .pay-option:active { transform: scale(0.98); }
+
+    .pay-opt-icon { font-size: 26px; flex-shrink: 0; }
+
+    .pay-opt-label { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .pay-opt-desc { font-size: 13px; color: var(--muted-2); }
+
+    .pay-check {
+      margin-left: auto; width: 22px; height: 22px;
+      background: var(--primary); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; color: white;
+      opacity: 0; transform: scale(0);
+      transition: all 0.2s; flex-shrink: 0;
+    }
+
+    .pay-option.selected .pay-check { opacity: 1; transform: scale(1); }
+
+    .pix-box {
+      background: rgba(255,255,255,0.04);
+      border: 1px dashed var(--border-2);
+      border-radius: var(--r-sm); padding: 14px 16px;
+      margin-top: 4px; display: none;
+    }
+
+    .pix-box.visible { display: block; }
+
+    .pix-box-lbl {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--muted-2); margin-bottom: 6px;
+    }
+
+    .pix-box-val {
+      font-size: 15px; font-weight: 600; color: var(--text);
+      word-break: break-all; margin-bottom: 10px;
+    }
+
+    .btn-copy {
+      padding: 8px 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border-2);
+      border-radius: 8px; color: var(--muted);
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      font-family: 'Inter', sans-serif; transition: all 0.2s;
+    }
+
+    .btn-copy:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+    .btn-copy.copied { color: var(--success); border-color: rgba(16,185,129,0.3); }
+
+    .card-link-btn {
+      display: none; margin-top: 4px;
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white; border: none;
+      border-radius: var(--r-sm); font-size: 15px; font-weight: 700;
+      text-align: center; text-decoration: none;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.3);
+      transition: all 0.2s;
+    }
+
+    .card-link-btn.visible { display: block; }
+    .card-link-btn:hover { transform: translateY(-1px); }
+
     @keyframes slideUp {
       from { opacity: 0; transform: translateY(18px); }
       to { opacity: 1; transform: translateY(0); }
@@ -617,13 +711,15 @@
       <div class="step-seg" id="seg2"></div>
       <div class="step-seg" id="seg3"></div>
       <div class="step-seg" id="seg4"></div>
+      <div class="step-seg" id="seg5"></div>
     </div>
 
     <div class="step-labels">
       <div class="step-lbl active" id="lbl1">Serviço</div>
       <div class="step-lbl" id="lbl2">Data</div>
-      <div class="step-lbl" id="lbl3">Horário</div>
+      <div class="step-lbl" id="lbl3">Hora</div>
       <div class="step-lbl" id="lbl4">Dados</div>
+      <div class="step-lbl" id="lbl5">Pagar</div>
     </div>
 
     <!-- STEP 1 -->
@@ -698,6 +794,46 @@
       </div>
       <div class="nav-row">
         <button class="btn-back" onclick="goStep(3)">← Voltar</button>
+        <button class="btn-main" id="btn-s4" onclick="goStep(5)" disabled>Próximo →</button>
+      </div>
+    </div>
+
+    <!-- STEP 5 -->
+    <div id="step5" class="hidden">
+      <div class="card">
+        <div class="card-ttl">Como vai pagar?</div>
+        <div class="pay-amount">
+          <div class="pay-amount-lbl">Valor total</div>
+          <div class="pay-amount-val" id="pay-price">R$ 0</div>
+        </div>
+        <div class="pay-options">
+          <div class="pay-option" id="pay-pix" onclick="selectPayment('pix')">
+            <div class="pay-opt-icon">📱</div>
+            <div>
+              <div class="pay-opt-label">PIX</div>
+              <div class="pay-opt-desc">Pague na hora, confirmação imediata</div>
+            </div>
+            <div class="pay-check">✓</div>
+          </div>
+          <div class="pix-box" id="pix-box">
+            <div class="pix-box-lbl">Chave PIX</div>
+            <div class="pix-box-val" id="pix-key-val">—</div>
+            <button class="btn-copy" id="btn-copy-pix" onclick="copyPix()">Copiar chave PIX</button>
+          </div>
+
+          <div class="pay-option" id="pay-cartao" onclick="selectPayment('cartao')">
+            <div class="pay-opt-icon">💳</div>
+            <div>
+              <div class="pay-opt-label">Cartão</div>
+              <div class="pay-opt-desc">Crédito, débito ou parcelado</div>
+            </div>
+            <div class="pay-check">✓</div>
+          </div>
+          <a id="card-link-btn" class="card-link-btn" href="#" target="_blank">Ir para pagamento →</a>
+        </div>
+      </div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="goStep(4)">← Voltar</button>
         <button class="btn-main" id="btn-confirm" onclick="confirmBooking()" disabled>Confirmar →</button>
       </div>
     </div>
@@ -718,6 +854,7 @@
             <div class="sum-row"><span class="sum-lbl">Data</span><span class="sum-val" id="conf-date"></span></div>
             <div class="sum-row"><span class="sum-lbl">Horário</span><span class="sum-val" id="conf-time"></span></div>
             <div class="sum-row"><span class="sum-lbl">Valor</span><span class="sum-val" id="conf-price"></span></div>
+            <div class="sum-row"><span class="sum-lbl">Pagamento</span><span class="sum-val" id="conf-payment"></span></div>
           </div>
           <button class="btn-new" onclick="newBooking()">+ Novo Agendamento</button>
         </div>
@@ -752,7 +889,7 @@ let config = {
   ]
 };
 
-let sel = { service: null, date: null, time: null };
+let sel = { service: null, date: null, time: null, paymentMethod: null };
 let timeSlots = [], calYear, calMonth;
 
 function generateSlots() {
@@ -896,7 +1033,7 @@ function pickTime(t, el) {
 }
 
 function updateStepsBar(currentStep) {
-  [1,2,3,4].forEach(i => {
+  [1,2,3,4,5].forEach(i => {
     const seg = document.getElementById('seg'+i);
     const lbl = document.getElementById('lbl'+i);
     seg.className = 'step-seg';
@@ -907,7 +1044,7 @@ function updateStepsBar(currentStep) {
 }
 
 function goStep(step) {
-  [1,2,3,4].forEach(i => document.getElementById('step'+i).classList.add('hidden'));
+  [1,2,3,4,5].forEach(i => document.getElementById('step'+i).classList.add('hidden'));
   document.getElementById('success-screen').classList.add('hidden');
   const el = document.getElementById('step'+step);
   el.classList.remove('hidden');
@@ -917,6 +1054,7 @@ function goStep(step) {
   updateStepsBar(step);
   if (step === 3) renderTimes();
   if (step === 4) updateSummary();
+  if (step === 5) updatePaymentStep();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -930,7 +1068,44 @@ function updateSummary() {
 function validateForm() {
   const n = document.getElementById('client-name').value.trim();
   const p = document.getElementById('client-phone').value.trim();
-  document.getElementById('btn-confirm').disabled = !(n.length >= 3 && p.length >= 10);
+  document.getElementById('btn-s4').disabled = !(n.length >= 3 && p.length >= 10);
+}
+
+function updatePaymentStep() {
+  document.getElementById('pay-price').textContent = `R$ ${sel.service.price}`;
+  const pixKey = config.pixKey || '';
+  const cardLink = config.cardLink || '';
+  document.getElementById('pix-key-val').textContent = pixKey || 'Chave não configurada';
+  const cardBtn = document.getElementById('card-link-btn');
+  cardBtn.href = cardLink || '#';
+  // Reset selection
+  sel.paymentMethod = null;
+  document.getElementById('pay-pix').classList.remove('selected');
+  document.getElementById('pay-cartao').classList.remove('selected');
+  document.getElementById('pix-box').classList.remove('visible');
+  cardBtn.classList.remove('visible');
+  document.getElementById('btn-confirm').disabled = true;
+}
+
+function selectPayment(method) {
+  sel.paymentMethod = method;
+  const isPix = method === 'pix';
+  document.getElementById('pay-pix').classList.toggle('selected', isPix);
+  document.getElementById('pay-cartao').classList.toggle('selected', !isPix);
+  document.getElementById('pix-box').classList.toggle('visible', isPix);
+  document.getElementById('card-link-btn').classList.toggle('visible', !isPix);
+  document.getElementById('btn-confirm').disabled = false;
+}
+
+function copyPix() {
+  const key = config.pixKey || '';
+  if (!key) return;
+  navigator.clipboard.writeText(key).then(() => {
+    const btn = document.getElementById('btn-copy-pix');
+    btn.textContent = '✓ Copiado!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copiar chave PIX'; btn.classList.remove('copied'); }, 2500);
+  }).catch(() => {});
 }
 
 async function confirmBooking() {
@@ -954,7 +1129,8 @@ async function confirmBooking() {
       service: sel.service.name, service_duration: sel.service.duration,
       service_price: sel.service.price,
       booking_date: sel.date, booking_time: sel.time,
-      status: 'agendado', code
+      status: 'agendado', code,
+      payment_method: sel.paymentMethod || 'pendente'
     });
     if (error) throw error;
     document.getElementById('booking-code').textContent = code;
@@ -962,6 +1138,7 @@ async function confirmBooking() {
     document.getElementById('conf-date').textContent = formatDateShort(sel.date);
     document.getElementById('conf-time').textContent = sel.time;
     document.getElementById('conf-price').textContent = `R$ ${sel.service.price}`;
+    document.getElementById('conf-payment').textContent = sel.paymentMethod === 'pix' ? 'PIX' : sel.paymentMethod === 'cartao' ? 'Cartão' : 'Pendente';
     [1,2,3,4].forEach(i => document.getElementById('step'+i).classList.add('hidden'));
     const ss = document.getElementById('success-screen');
     ss.classList.remove('hidden');
@@ -976,7 +1153,7 @@ async function confirmBooking() {
 }
 
 function newBooking() {
-  sel = { service: null, date: null, time: null };
+  sel = { service: null, date: null, time: null, paymentMethod: null };
   document.getElementById('client-name').value = '';
   document.getElementById('client-phone').value = '';
   document.getElementById('success-screen').classList.add('hidden');
