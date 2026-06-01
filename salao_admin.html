@@ -820,7 +820,7 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 const DAYS_FULL = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 const MONTHS = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 
-let allBookings = [], realtimeChannel = null, currentFilter = 'todos';
+let allBookings = [], realtimeChannel = null, currentFilter = 'todos', newBadgeCount = 0;
 let config = {
   salonName: 'AgendaPro', password: 'bella123',
   startTime: '08:00', endTime: '18:00',
@@ -961,6 +961,7 @@ async function login() {
   if (pass === config.password) {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
+    clearBadge();
     loadBookings();
     setupRealtime();
     requestNotificationPermission();
@@ -972,9 +973,20 @@ async function login() {
   }
 }
 
+function setBadge(n) {
+  if ('setAppBadge' in navigator) n > 0 ? navigator.setAppBadge(n) : navigator.clearAppBadge();
+  if (navigator.serviceWorker && navigator.serviceWorker.controller)
+    navigator.serviceWorker.controller.postMessage({ type: 'SET_BADGE', count: n });
+}
+
+function clearBadge() {
+  newBadgeCount = 0;
+  setBadge(0);
+}
+
 function logout() {
   if (realtimeChannel) db.removeChannel(realtimeChannel);
-  if ('clearAppBadge' in navigator) navigator.clearAppBadge();
+  clearBadge();
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-pass').value = '';
@@ -992,6 +1004,8 @@ function showTab(tab) {
 function setupRealtime() {
   realtimeChannel = db.channel('bookings-rt')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bookings' }, payload => {
+      newBadgeCount++;
+      setBadge(newBadgeCount);
       showBookingNotification(payload.new);
       loadBookings();
     })
@@ -1043,14 +1057,6 @@ function updateStats() {
   document.getElementById('stat-total').textContent = allBookings.length;
   document.getElementById('stat-receita').textContent = 'R$' + receita;
 
-  // Badge com agendamentos pendentes de hoje
-  const pendingCount = todayB.length;
-  if ('setAppBadge' in navigator) {
-    pendingCount > 0 ? navigator.setAppBadge(pendingCount) : navigator.clearAppBadge();
-  }
-  if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-    navigator.serviceWorker.controller.postMessage({ type: 'SET_BADGE', count: pendingCount });
-  }
 }
 
 function formatDate(dateStr) {
@@ -1172,6 +1178,10 @@ function dismissInstall() {
 window.addEventListener('appinstalled', () => dismissInstall());
 
 loadConfig();
+
+// Zera badge quando o dono abre/foca o app
+document.addEventListener('visibilitychange', () => { if (!document.hidden) clearBadge(); });
+window.addEventListener('focus', clearBadge);
 </script>
 </body>
 </html>
