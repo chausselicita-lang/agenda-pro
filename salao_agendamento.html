@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Agendamento</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -576,19 +576,56 @@
     .btn-copy:hover { background: rgba(255,255,255,0.1); color: var(--text); }
     .btn-copy.copied { color: var(--success); border-color: rgba(16,185,129,0.3); }
 
-    .pix-qr-wrap {
-      display: flex; justify-content: center;
-      padding: 14px; background: white;
-      border-radius: 12px; margin-bottom: 14px;
+    .pix-val-block {
+      text-align: center; padding: 16px 12px;
+      background: rgba(255,241,118,0.06);
+      border: 1px solid rgba(255,241,118,0.18);
+      border-radius: var(--r-sm); margin-bottom: 14px;
     }
 
-    #pix-qr-container img { display: none; }
-    #pix-qr-container canvas { display: block; border-radius: 6px; }
+    .pix-val-lbl {
+      font-size: 11px; font-weight: 700; color: var(--muted-2);
+      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;
+    }
 
-    .pix-box-amount {
+    .pix-val-big {
       font-family: Georgia, sans-serif;
-      font-size: 22px; font-weight: 700; color: #FFF176;
-      margin-bottom: 10px; text-align: center;
+      font-size: 34px; font-weight: 700; color: #FFF176;
+    }
+
+    .pix-key-display {
+      font-size: 16px; font-weight: 600; color: var(--text);
+      word-break: break-all;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border-2);
+      border-radius: 10px; padding: 13px 14px;
+      text-align: center; margin-bottom: 12px;
+      letter-spacing: 0.01em;
+    }
+
+    .btn-copy-big {
+      width: 100%; padding: 16px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white; border: none;
+      border-radius: var(--r-sm); font-size: 16px; font-weight: 700;
+      cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: all 0.25s; margin-bottom: 12px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.3);
+    }
+
+    .btn-copy-big:hover { transform: translateY(-1px); }
+    .btn-copy-big:active { transform: scale(0.98); }
+    .btn-copy-big.copied {
+      background: linear-gradient(135deg, #059669, #10B981);
+      box-shadow: 0 4px 18px rgba(16,185,129,0.3);
+    }
+
+    .pix-instruction {
+      text-align: center; font-size: 14px; color: var(--muted);
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm); padding: 13px 16px;
+      line-height: 1.6;
     }
 
     .pay-info {
@@ -845,15 +882,16 @@
             <div class="pay-check">✓</div>
           </div>
           <div class="pix-box" id="pix-box">
-            <div id="pix-qr-wrap" class="pix-qr-wrap">
-              <div id="pix-qr-container"></div>
+            <div class="pix-val-block">
+              <div class="pix-val-lbl">Valor a pagar</div>
+              <div class="pix-val-big" id="pix-box-amount">R$ 0</div>
             </div>
-            <div class="pix-box-lbl">Valor a pagar</div>
-            <div class="pix-box-amount" id="pix-box-amount">R$ 0</div>
-            <div class="pix-box-lbl" style="margin-top:10px">Chave PIX</div>
-            <div class="pix-box-val" id="pix-key-val">—</div>
-            <button class="btn-copy" id="btn-copy-pix" onclick="copyPix()">Copiar chave PIX</button>
-            <p class="pay-info">Após realizar o pagamento, clique em Confirmar</p>
+            <div class="pix-box-lbl">Chave PIX</div>
+            <div class="pix-key-display" id="pix-key-val">—</div>
+            <button class="btn-copy-big" id="btn-copy-pix" onclick="copyPix()">📋 Copiar chave PIX</button>
+            <div class="pix-instruction" id="pix-instruction">
+              Abra seu banco, cole a chave e pague <strong id="pix-instr-val">R$ 0</strong>
+            </div>
           </div>
 
           <div class="pay-option" id="pay-cartao" onclick="selectPayment('cartao')">
@@ -1118,9 +1156,11 @@ function clearPaymentTimers() {
 
 function updatePaymentStep() {
   clearPaymentTimers();
-  const amtStr = `R$ ${sel.service.price}`;
+  const price = sel.service.price;
+  const amtStr = `R$ ${price}`;
   document.getElementById('pay-price').textContent = amtStr;
   document.getElementById('pix-box-amount').textContent = amtStr;
+  document.getElementById('pix-instr-val').textContent = amtStr;
   const pixKey = config.pixKey || '';
   document.getElementById('pix-key-val').textContent = pixKey || 'Chave não configurada';
   const cardBtn = document.getElementById('card-link-btn');
@@ -1147,7 +1187,6 @@ function selectPayment(method) {
   document.getElementById('card-info').style.display = isPix ? 'none' : 'block';
   document.getElementById('btn-confirm').disabled = true;
   if (isPix) {
-    renderPIXQR();
     startPixCountdown();
   } else {
     setupCardReturn();
@@ -1156,7 +1195,7 @@ function selectPayment(method) {
 
 function startPixCountdown() {
   const btn = document.getElementById('btn-confirm');
-  let secs = 10;
+  let secs = 15;
   btn.textContent = `Aguarde ${secs}s...`;
   btn.disabled = true;
   _confirmTimer = setInterval(() => {
@@ -1184,63 +1223,19 @@ function setupCardReturn() {
   window.addEventListener('focus', _cardFocusHandler);
 }
 
-function crc16(str) {
-  let crc = 0xFFFF;
-  for (let i = 0; i < str.length; i++) {
-    crc ^= str.charCodeAt(i) << 8;
-    for (let j = 0; j < 8; j++) {
-      if (crc & 0x8000) crc = (crc << 1) ^ 0x1021;
-      else crc <<= 1;
-    }
-  }
-  return crc & 0xFFFF;
-}
-
-function buildPIXPayload(pixKey, amount, name) {
-  const tlv = (id, v) => `${id}${String(v.length).padStart(2,'0')}${v}`;
-  const pixInfo = tlv('00','br.gov.bcb.pix') + tlv('01', pixKey);
-  let p = tlv('00','01') + tlv('26', pixInfo) + tlv('52','0000') + tlv('53','986')
-        + tlv('54', parseFloat(amount).toFixed(2))
-        + tlv('58','BR')
-        + tlv('59', (name||'Salao').replace(/[^A-Za-z0-9 ]/g,'').substring(0,25).toUpperCase())
-        + tlv('60','BRASIL')
-        + tlv('62', tlv('05','***'))
-        + '6304';
-  return p + crc16(p).toString(16).toUpperCase().padStart(4,'0');
-}
-
-function renderPIXQR() {
-  const wrap = document.getElementById('pix-qr-wrap');
-  const pixKey = config.pixKey || '';
-  if (!pixKey) {
-    wrap.innerHTML = '<p style="color:#94A3B8;font-size:13px;text-align:center;padding:10px">Configure a chave PIX no painel admin</p>';
-    return;
-  }
-  wrap.innerHTML = '<div id="pix-qr-container"></div>';
-  try {
-    const payload = buildPIXPayload(pixKey, sel.service.price, config.salonName);
-    new QRCode(document.getElementById('pix-qr-container'), {
-      text: payload,
-      width: 190,
-      height: 190,
-      colorDark: '#000000',
-      colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.M
-    });
-  } catch(e) {
-    wrap.innerHTML = '<p style="color:#94A3B8;font-size:13px;text-align:center;padding:10px">Erro ao gerar QR Code</p>';
-  }
-}
 
 function copyPix() {
   const key = config.pixKey || '';
   if (!key) return;
   navigator.clipboard.writeText(key).then(() => {
     const btn = document.getElementById('btn-copy-pix');
-    btn.textContent = '✓ Copiado!';
+    btn.textContent = '✓ Chave copiada!';
     btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'Copiar chave PIX'; btn.classList.remove('copied'); }, 2500);
-  }).catch(() => {});
+    setTimeout(() => { btn.textContent = '📋 Copiar chave PIX'; btn.classList.remove('copied'); }, 3000);
+  }).catch(() => {
+    const key2 = document.getElementById('pix-key-val').textContent;
+    prompt('Copie a chave PIX:', key2);
+  });
 }
 
 async function confirmBooking() {
