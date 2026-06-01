@@ -220,6 +220,35 @@
 
     .btn-icon:hover { background: var(--surface-hover); color: var(--text); }
 
+    .notif-wrap { position: relative; display: none; }
+
+    .notif-btn {
+      background: var(--surface);
+      border: 1px solid rgba(239,68,68,0.35);
+      color: var(--text); padding: 7px 11px;
+      border-radius: 8px; font-size: 16px;
+      cursor: pointer; position: relative;
+      transition: all 0.2s;
+    }
+
+    .notif-btn:hover { background: rgba(239,68,68,0.08); }
+
+    .notif-count {
+      position: absolute; top: -7px; right: -7px;
+      background: #EF4444; color: #fff;
+      font-size: 11px; font-weight: 700; font-family: 'Inter', sans-serif;
+      min-width: 18px; height: 18px;
+      border-radius: 100px; padding: 0 4px;
+      display: flex; align-items: center; justify-content: center;
+      border: 2px solid var(--bg);
+      animation: popIn 0.25s cubic-bezier(.34,1.56,.64,1);
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+
     /* TABS */
     .nav-tabs {
       background: rgba(6,8,15,0.95);
@@ -671,6 +700,11 @@
     </div>
     <div class="header-actions">
       <span class="badge-live"><span class="live-dot"></span>Ao vivo</span>
+      <div class="notif-wrap" id="notif-wrap">
+        <button class="notif-btn" onclick="clearBadge()" title="Novos agendamentos — toque para dispensar">
+          🔔<span class="notif-count" id="notif-count">0</span>
+        </button>
+      </div>
       <button class="btn-icon" onclick="logout()">Sair</button>
     </div>
   </header>
@@ -974,7 +1008,25 @@ async function login() {
 }
 
 function setBadge(n) {
-  if ('setAppBadge' in navigator) n > 0 ? navigator.setAppBadge(n) : navigator.clearAppBadge();
+  // Visual: sino no header (funciona em qualquer browser)
+  const wrap = document.getElementById('notif-wrap');
+  const countEl = document.getElementById('notif-count');
+  if (wrap && countEl) {
+    if (n > 0) {
+      countEl.textContent = n > 99 ? '99+' : n;
+      // Reinicia animação removendo/readicionando o span
+      countEl.style.animation = 'none';
+      requestAnimationFrame(() => { countEl.style.animation = ''; });
+      wrap.style.display = 'block';
+    } else {
+      wrap.style.display = 'none';
+    }
+  }
+  // Nativo: badge no ícone do PWA (apenas quando instalado como PWA)
+  try {
+    if ('setAppBadge' in navigator)
+      n > 0 ? navigator.setAppBadge(n) : navigator.clearAppBadge();
+  } catch {}
   if (navigator.serviceWorker && navigator.serviceWorker.controller)
     navigator.serviceWorker.controller.postMessage({ type: 'SET_BADGE', count: n });
 }
