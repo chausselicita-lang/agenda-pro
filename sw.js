@@ -1,4 +1,4 @@
-const CACHE = 'agendapro-v7';
+const CACHE = 'agendapro-v8';
 
 // Arquivos HTML — sempre buscados na rede (network-first)
 const HTML_FILES = [
@@ -11,6 +11,8 @@ const HTML_FILES = [
 const ASSETS = [
   './manifest.json',
   './manifest-admin.json',
+  './icon-app-192.png',
+  './icon-app-512.png',
   './icon-192.png',
   './icon-512.png',
   './icon-admin-192.png',
