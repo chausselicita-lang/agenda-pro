@@ -298,6 +298,13 @@
   // ⚙️ CONFIGURAÇÃO SUPABASE
   // Cole aqui sua Publishable Key completa
   // ══════════════════════════════════════════
+  // Captura o prompt de instalação PWA para disparar só após o cadastro
+  let installPrompt = null;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    installPrompt = e;
+  });
+
   const SUPABASE_URL = 'https://zigghtvlmftgjlohuhla.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_o5ibiwWTvnZ8gXfdJQkFqA_jKZhTiGU';
 
@@ -409,6 +416,11 @@
       // Salvar slug no localStorage para uso futuro
       localStorage.setItem('agendapro_slug', slug);
       localStorage.setItem('agendapro_nome', nome);
+
+      // Prompt de instalação PWA — aparece só agora, após o cadastro confirmado
+      if (installPrompt) {
+        setTimeout(() => { installPrompt.prompt(); installPrompt = null; }, 1500);
+      }
 
     } catch (err) {
       alerta.className = 'alert error';
