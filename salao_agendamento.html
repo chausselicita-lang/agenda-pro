@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Agendamento</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -582,6 +582,9 @@
       border-radius: 12px; margin-bottom: 14px;
     }
 
+    #pix-qr-container img { display: none; }
+    #pix-qr-container canvas { display: block; border-radius: 6px; }
+
     .pix-box-amount {
       font-family: Georgia, sans-serif;
       font-size: 22px; font-weight: 700; color: #FFF176;
@@ -843,7 +846,7 @@
           </div>
           <div class="pix-box" id="pix-box">
             <div id="pix-qr-wrap" class="pix-qr-wrap">
-              <canvas id="pix-qr"></canvas>
+              <div id="pix-qr-container"></div>
             </div>
             <div class="pix-box-lbl">Valor a pagar</div>
             <div class="pix-box-amount" id="pix-box-amount">R$ 0</div>
@@ -1206,22 +1209,26 @@ function buildPIXPayload(pixKey, amount, name) {
   return p + crc16(p).toString(16).toUpperCase().padStart(4,'0');
 }
 
-async function renderPIXQR() {
-  const pixKey = config.pixKey || '';
+function renderPIXQR() {
   const wrap = document.getElementById('pix-qr-wrap');
+  const pixKey = config.pixKey || '';
   if (!pixKey) {
-    wrap.innerHTML = '<p style="color:var(--muted-2);font-size:13px;text-align:center;padding:10px">Configure a chave PIX no painel admin</p>';
+    wrap.innerHTML = '<p style="color:#94A3B8;font-size:13px;text-align:center;padding:10px">Configure a chave PIX no painel admin</p>';
     return;
   }
-  wrap.innerHTML = '<canvas id="pix-qr"></canvas>';
+  wrap.innerHTML = '<div id="pix-qr-container"></div>';
   try {
     const payload = buildPIXPayload(pixKey, sel.service.price, config.salonName);
-    await QRCode.toCanvas(document.getElementById('pix-qr'), payload, {
-      width: 190, margin: 2,
-      color: { dark: '#000000', light: '#ffffff' }
+    new QRCode(document.getElementById('pix-qr-container'), {
+      text: payload,
+      width: 190,
+      height: 190,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
     });
   } catch(e) {
-    wrap.innerHTML = '<p style="color:var(--muted-2);font-size:13px;text-align:center;padding:10px">Erro ao gerar QR Code</p>';
+    wrap.innerHTML = '<p style="color:#94A3B8;font-size:13px;text-align:center;padding:10px">Erro ao gerar QR Code</p>';
   }
 }
 
