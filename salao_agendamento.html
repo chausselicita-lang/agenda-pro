@@ -1164,7 +1164,7 @@ function updatePaymentStep() {
   const pixKey = config.pixKey || '';
   document.getElementById('pix-key-val').textContent = pixKey || 'Chave não configurada';
   const cardBtn = document.getElementById('card-link-btn');
-  cardBtn.href = config.cardLink || '#';
+  cardBtn.href = safeUrl(config.cardLink);
   sel.paymentMethod = null;
   document.getElementById('pay-pix').classList.remove('selected');
   document.getElementById('pay-cartao').classList.remove('selected');
@@ -1223,6 +1223,11 @@ function setupCardReturn() {
   window.addEventListener('focus', _cardFocusHandler);
 }
 
+
+function safeUrl(url) {
+  if (!url || !url.trim()) return '#';
+  return /^https?:\/\//i.test(url.trim()) ? url.trim() : 'https://' + url.trim();
+}
 
 function copyPix() {
   const key = config.pixKey || '';
