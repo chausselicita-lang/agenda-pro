@@ -386,6 +386,7 @@
     .chip-blue { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); color: var(--blue); }
     .chip-green { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); color: var(--success); }
     .chip-gray { background: rgba(71,85,105,0.12); border: 1px solid rgba(71,85,105,0.18); color: var(--muted-2); }
+    .chip-yellow { background: rgba(234,179,8,0.1); border: 1px solid rgba(234,179,8,0.25); color: #EAB308; }
 
     .bk-btns { display: flex; gap: 6px; }
 
@@ -1060,7 +1061,17 @@ function formatDate(dateStr) {
 function paymentChip(method) {
   if (method === 'pix') return `<span class="chip chip-green">📱 Pago via PIX</span>`;
   if (method === 'cartao') return `<span class="chip chip-blue">💳 Pago via Cartão</span>`;
-  return `<span class="chip chip-gray">⏳ Pendente</span>`;
+  if (method === 'pix_pending') return `<span class="chip chip-yellow">⏳ Aguardando PIX</span>`;
+  if (method === 'cartao_pending') return `<span class="chip chip-yellow">⏳ Aguardando Cartão</span>`;
+  return `<span class="chip chip-gray">💳 Pendente</span>`;
+}
+
+async function confirmPayment(id, currentMethod) {
+  const confirmed = currentMethod.replace('_pending', '');
+  try {
+    await db.from('bookings').update({ payment_method: confirmed }).eq('id', id);
+    loadBookings();
+  } catch(e) { alert('Erro: ' + e.message); }
 }
 
 function bookingCard(b, showDate) {
@@ -1084,6 +1095,9 @@ function bookingCard(b, showDate) {
       </div>
       <div class="bk-btns">
         <button class="sm-btn wpp" onclick="openWhatsApp('${b.client_phone}','${b.client_name}','${b.service}','${b.booking_time}')">WhatsApp</button>
+        ${(b.payment_method === 'pix_pending' || b.payment_method === 'cartao_pending') ? `
+          <button class="sm-btn ok" onclick="confirmPayment('${b.id}','${b.payment_method}')">💰 Pgto Recebido</button>
+        ` : ''}
         ${b.status === 'agendado' ? `
           <button class="sm-btn ok" onclick="updateStatus('${b.id}','concluido')">✓ Concluir</button>
           <button class="sm-btn no" onclick="updateStatus('${b.id}','cancelado')">✕</button>

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Agendamento</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -575,6 +576,31 @@
     .btn-copy:hover { background: rgba(255,255,255,0.1); color: var(--text); }
     .btn-copy.copied { color: var(--success); border-color: rgba(16,185,129,0.3); }
 
+    .pix-qr-wrap {
+      display: flex; justify-content: center;
+      padding: 14px; background: white;
+      border-radius: 12px; margin-bottom: 14px;
+    }
+
+    .pix-box-amount {
+      font-family: Georgia, sans-serif;
+      font-size: 22px; font-weight: 700; color: #FFF176;
+      margin-bottom: 10px; text-align: center;
+    }
+
+    .pay-info {
+      font-size: 12px; color: var(--muted-2);
+      text-align: center; margin-top: 12px;
+      font-style: italic; line-height: 1.5;
+    }
+
+    .card-info {
+      font-size: 12px; color: var(--muted-2);
+      text-align: center; margin-top: 8px;
+      font-style: italic; line-height: 1.5;
+      display: none;
+    }
+
     .card-link-btn {
       display: none; margin-top: 4px;
       width: 100%; padding: 14px;
@@ -816,9 +842,15 @@
             <div class="pay-check">✓</div>
           </div>
           <div class="pix-box" id="pix-box">
-            <div class="pix-box-lbl">Chave PIX</div>
+            <div id="pix-qr-wrap" class="pix-qr-wrap">
+              <canvas id="pix-qr"></canvas>
+            </div>
+            <div class="pix-box-lbl">Valor a pagar</div>
+            <div class="pix-box-amount" id="pix-box-amount">R$ 0</div>
+            <div class="pix-box-lbl" style="margin-top:10px">Chave PIX</div>
             <div class="pix-box-val" id="pix-key-val">—</div>
             <button class="btn-copy" id="btn-copy-pix" onclick="copyPix()">Copiar chave PIX</button>
+            <p class="pay-info">Após realizar o pagamento, clique em Confirmar</p>
           </div>
 
           <div class="pay-option" id="pay-cartao" onclick="selectPayment('cartao')">
@@ -829,7 +861,8 @@
             </div>
             <div class="pay-check">✓</div>
           </div>
-          <a id="card-link-btn" class="card-link-btn" href="#" target="_blank">Ir para pagamento →</a>
+          <a id="card-link-btn" class="card-link-btn" href="#" target="_blank">Ir para pagamento com cartão →</a>
+          <p class="card-info" id="card-info">Após concluir o pagamento, retorne aqui — o botão Confirmar será liberado automaticamente</p>
         </div>
       </div>
       <div class="nav-row">
@@ -1071,30 +1104,125 @@ function validateForm() {
   document.getElementById('btn-s4').disabled = !(n.length >= 3 && p.length >= 10);
 }
 
+let _confirmTimer = null;
+let _cardBlurHandler = null, _cardFocusHandler = null;
+
+function clearPaymentTimers() {
+  if (_confirmTimer) { clearInterval(_confirmTimer); _confirmTimer = null; }
+  if (_cardBlurHandler) { window.removeEventListener('blur', _cardBlurHandler); _cardBlurHandler = null; }
+  if (_cardFocusHandler) { window.removeEventListener('focus', _cardFocusHandler); _cardFocusHandler = null; }
+}
+
 function updatePaymentStep() {
-  document.getElementById('pay-price').textContent = `R$ ${sel.service.price}`;
+  clearPaymentTimers();
+  const amtStr = `R$ ${sel.service.price}`;
+  document.getElementById('pay-price').textContent = amtStr;
+  document.getElementById('pix-box-amount').textContent = amtStr;
   const pixKey = config.pixKey || '';
-  const cardLink = config.cardLink || '';
   document.getElementById('pix-key-val').textContent = pixKey || 'Chave não configurada';
   const cardBtn = document.getElementById('card-link-btn');
-  cardBtn.href = cardLink || '#';
-  // Reset selection
+  cardBtn.href = config.cardLink || '#';
   sel.paymentMethod = null;
   document.getElementById('pay-pix').classList.remove('selected');
   document.getElementById('pay-cartao').classList.remove('selected');
   document.getElementById('pix-box').classList.remove('visible');
   cardBtn.classList.remove('visible');
-  document.getElementById('btn-confirm').disabled = true;
+  document.getElementById('card-info').style.display = 'none';
+  const btn = document.getElementById('btn-confirm');
+  btn.disabled = true;
+  btn.textContent = 'Confirmar →';
 }
 
 function selectPayment(method) {
+  clearPaymentTimers();
   sel.paymentMethod = method;
   const isPix = method === 'pix';
   document.getElementById('pay-pix').classList.toggle('selected', isPix);
   document.getElementById('pay-cartao').classList.toggle('selected', !isPix);
   document.getElementById('pix-box').classList.toggle('visible', isPix);
   document.getElementById('card-link-btn').classList.toggle('visible', !isPix);
-  document.getElementById('btn-confirm').disabled = false;
+  document.getElementById('card-info').style.display = isPix ? 'none' : 'block';
+  document.getElementById('btn-confirm').disabled = true;
+  if (isPix) {
+    renderPIXQR();
+    startPixCountdown();
+  } else {
+    setupCardReturn();
+  }
+}
+
+function startPixCountdown() {
+  const btn = document.getElementById('btn-confirm');
+  let secs = 10;
+  btn.textContent = `Aguarde ${secs}s...`;
+  btn.disabled = true;
+  _confirmTimer = setInterval(() => {
+    secs--;
+    if (secs > 0) {
+      btn.textContent = `Aguarde ${secs}s...`;
+    } else {
+      clearInterval(_confirmTimer); _confirmTimer = null;
+      btn.disabled = false;
+      btn.textContent = 'Confirmar →';
+    }
+  }, 1000);
+}
+
+function setupCardReturn() {
+  let hasLeft = false;
+  _cardBlurHandler = () => { hasLeft = true; };
+  _cardFocusHandler = () => {
+    if (hasLeft) {
+      clearPaymentTimers();
+      document.getElementById('btn-confirm').disabled = false;
+    }
+  };
+  window.addEventListener('blur', _cardBlurHandler);
+  window.addEventListener('focus', _cardFocusHandler);
+}
+
+function crc16(str) {
+  let crc = 0xFFFF;
+  for (let i = 0; i < str.length; i++) {
+    crc ^= str.charCodeAt(i) << 8;
+    for (let j = 0; j < 8; j++) {
+      if (crc & 0x8000) crc = (crc << 1) ^ 0x1021;
+      else crc <<= 1;
+    }
+  }
+  return crc & 0xFFFF;
+}
+
+function buildPIXPayload(pixKey, amount, name) {
+  const tlv = (id, v) => `${id}${String(v.length).padStart(2,'0')}${v}`;
+  const pixInfo = tlv('00','br.gov.bcb.pix') + tlv('01', pixKey);
+  let p = tlv('00','01') + tlv('26', pixInfo) + tlv('52','0000') + tlv('53','986')
+        + tlv('54', parseFloat(amount).toFixed(2))
+        + tlv('58','BR')
+        + tlv('59', (name||'Salao').replace(/[^A-Za-z0-9 ]/g,'').substring(0,25).toUpperCase())
+        + tlv('60','BRASIL')
+        + tlv('62', tlv('05','***'))
+        + '6304';
+  return p + crc16(p).toString(16).toUpperCase().padStart(4,'0');
+}
+
+async function renderPIXQR() {
+  const pixKey = config.pixKey || '';
+  const wrap = document.getElementById('pix-qr-wrap');
+  if (!pixKey) {
+    wrap.innerHTML = '<p style="color:var(--muted-2);font-size:13px;text-align:center;padding:10px">Configure a chave PIX no painel admin</p>';
+    return;
+  }
+  wrap.innerHTML = '<canvas id="pix-qr"></canvas>';
+  try {
+    const payload = buildPIXPayload(pixKey, sel.service.price, config.salonName);
+    await QRCode.toCanvas(document.getElementById('pix-qr'), payload, {
+      width: 190, margin: 2,
+      color: { dark: '#000000', light: '#ffffff' }
+    });
+  } catch(e) {
+    wrap.innerHTML = '<p style="color:var(--muted-2);font-size:13px;text-align:center;padding:10px">Erro ao gerar QR Code</p>';
+  }
 }
 
 function copyPix() {
@@ -1130,7 +1258,7 @@ async function confirmBooking() {
       service_price: sel.service.price,
       booking_date: sel.date, booking_time: sel.time,
       status: 'agendado', code,
-      payment_method: sel.paymentMethod || 'pendente'
+      payment_method: sel.paymentMethod === 'pix' ? 'pix_pending' : sel.paymentMethod === 'cartao' ? 'cartao_pending' : 'pendente'
     });
     if (error) throw error;
     document.getElementById('booking-code').textContent = code;
@@ -1138,8 +1266,8 @@ async function confirmBooking() {
     document.getElementById('conf-date').textContent = formatDateShort(sel.date);
     document.getElementById('conf-time').textContent = sel.time;
     document.getElementById('conf-price').textContent = `R$ ${sel.service.price}`;
-    document.getElementById('conf-payment').textContent = sel.paymentMethod === 'pix' ? 'PIX' : sel.paymentMethod === 'cartao' ? 'Cartão' : 'Pendente';
-    [1,2,3,4].forEach(i => document.getElementById('step'+i).classList.add('hidden'));
+    document.getElementById('conf-payment').textContent = sel.paymentMethod === 'pix' ? 'PIX — Aguardando confirmação' : sel.paymentMethod === 'cartao' ? 'Cartão — Aguardando confirmação' : 'Pendente';
+    [1,2,3,4,5].forEach(i => document.getElementById('step'+i).classList.add('hidden'));
     const ss = document.getElementById('success-screen');
     ss.classList.remove('hidden');
     ss.classList.remove('slide-in');
