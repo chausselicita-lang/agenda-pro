@@ -264,6 +264,16 @@
         <input type="email" id="email" placeholder="seu@email.com"/>
       </div>
 
+      <div class="field">
+        <label>Crie sua Senha *</label>
+        <input type="password" id="senha" placeholder="Mínimo 6 caracteres"/>
+      </div>
+
+      <div class="field">
+        <label>Confirme a Senha *</label>
+        <input type="password" id="senha-confirm" placeholder="Repita a senha"/>
+      </div>
+
       <div class="alert" id="alert-error"></div>
 
       <button class="btn" id="btn-submit" onclick="cadastrar()">
@@ -342,19 +352,19 @@
   // Cadastro no Supabase
   // ══════════════════════════════════════════
   async function cadastrar() {
-    const nome      = document.getElementById('nome').value.trim();
+    const nome        = document.getElementById('nome').value.trim();
     const responsavel = document.getElementById('responsavel').value.trim();
-    const telefone  = document.getElementById('telefone').value.trim();
-    const email     = document.getElementById('email').value.trim();
-    const alerta    = document.getElementById('alert-error');
-    const btn       = document.getElementById('btn-submit');
+    const telefone    = document.getElementById('telefone').value.trim();
+    const email       = document.getElementById('email').value.trim();
+    const senha       = document.getElementById('senha').value;
+    const senhaConf   = document.getElementById('senha-confirm').value;
+    const alerta      = document.getElementById('alert-error');
+    const btn         = document.getElementById('btn-submit');
 
-    // Limpar erro anterior
     alerta.className = 'alert';
     alerta.textContent = '';
 
-    // Validação
-    if (!nome || !responsavel || !telefone || !email) {
+    if (!nome || !responsavel || !telefone || !email || !senha || !senhaConf) {
       alerta.className = 'alert error';
       alerta.textContent = '⚠️ Preencha todos os campos para continuar.';
       return;
@@ -364,8 +374,17 @@
       alerta.textContent = '⚠️ Digite um e-mail válido.';
       return;
     }
+    if (senha.length < 6) {
+      alerta.className = 'alert error';
+      alerta.textContent = '⚠️ A senha deve ter pelo menos 6 caracteres.';
+      return;
+    }
+    if (senha !== senhaConf) {
+      alerta.className = 'alert error';
+      alerta.textContent = '⚠️ As senhas não coincidem. Verifique e tente novamente.';
+      return;
+    }
 
-    // Loading
     btn.disabled = true;
     btn.innerHTML = `<div class="btn-loading"><div class="spinner"></div> Criando seu salão...</div>`;
 
@@ -393,7 +412,6 @@
       const data = await response.json();
 
       if (!response.ok) {
-        // Slug duplicado
         if (data.code === '23505') {
           alerta.className = 'alert error';
           alerta.textContent = '⚠️ Já existe um salão com esse nome. Tente um nome diferente.';
@@ -405,6 +423,35 @@
         return;
       }
 
+      // Salva senha e config inicial no painel admin
+      const adminConfig = {
+        salonName: nome,
+        password: senha,
+        startTime: '08:00', endTime: '18:00',
+        lunchStart: '12:00', lunchEnd: '13:00',
+        interval: 30,
+        primaryColor: '#9b2335', secondaryColor: '#c94070',
+        pixKey: '', cardLink: '',
+        services: [
+          { name: 'Corte Feminino', icon: '✂️', duration: 60, price: 60 },
+          { name: 'Corte Masculino', icon: '💈', duration: 45, price: 45 },
+          { name: 'Escova', icon: '💨', duration: 60, price: 55 },
+          { name: 'Coloração', icon: '🎨', duration: 120, price: 150 },
+          { name: 'Manicure', icon: '💅', duration: 60, price: 35 },
+          { name: 'Sobrancelha', icon: '👁️', duration: 30, price: 25 },
+        ]
+      };
+      await fetch(`${SUPABASE_URL}/rest/v1/settings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Prefer': 'resolution=merge-duplicates,return=minimal'
+        },
+        body: JSON.stringify({ key: 'config', value: JSON.stringify(adminConfig) })
+      });
+
       // SUCESSO — mostrar link
       const linkFinal = `${BASE_URL}/salao_agendamento.html?salao=${slug}`;
       document.getElementById('link-gerado').textContent = linkFinal;
@@ -413,11 +460,9 @@
       document.getElementById('form-section').style.display = 'none';
       document.getElementById('success-section').classList.add('visible');
 
-      // Salvar slug no localStorage para uso futuro
       localStorage.setItem('agendapro_slug', slug);
       localStorage.setItem('agendapro_nome', nome);
 
-      // Prompt de instalação PWA — aparece só agora, após o cadastro confirmado
       if (installPrompt) {
         setTimeout(() => { installPrompt.prompt(); installPrompt = null; }, 1500);
       }
@@ -426,7 +471,7 @@
       alerta.className = 'alert error';
       alerta.textContent = `❌ Erro: ${err.message}. Tente novamente.`;
       btn.disabled = false;
-      btn.textContent = 'Criar minha agenda grátis →';
+      btn.textContent = 'Criar minha agenda →';
     }
   }
 
