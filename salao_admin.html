@@ -1172,20 +1172,24 @@ async function saveConfig() {
   } catch(e) { alert('Erro ao salvar: ' + e.message); }
 }
 
+function enterApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  clearBadge();
+  loadBookings();
+  setupRealtime();
+  requestNotificationPermission();
+  const tabParam = new URLSearchParams(window.location.search).get('tab');
+  if (tabParam && ['agenda','todos','relatorios','config'].includes(tabParam)) showTab(tabParam);
+}
+
 async function login() {
   await loadConfig();
   const pass = document.getElementById('login-pass').value.trim();
   const senha = config.password || 'bella123';
   if (pass === senha || pass === 'bella123') {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    clearBadge();
-    loadBookings();
-    setupRealtime();
-    requestNotificationPermission();
-    // Atalhos PWA: ?tab=agenda | todos | config
-    const tabParam = new URLSearchParams(window.location.search).get('tab');
-    if (tabParam && ['agenda','todos','relatorios','config'].includes(tabParam)) showTab(tabParam);
+    localStorage.setItem('admin_session', Date.now().toString());
+    enterApp();
   } else {
     document.getElementById('login-error').style.display = 'block';
   }
@@ -1223,6 +1227,7 @@ function clearBadge() {
 function logout() {
   if (realtimeChannel) db.removeChannel(realtimeChannel);
   clearBadge();
+  localStorage.removeItem('admin_session');
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-pass').value = '';
@@ -1550,7 +1555,13 @@ function renderRelatorios() {
     </div>`;
 }
 
-loadConfig();
+// Restaura sessão se ainda válida (12 horas)
+loadConfig().then(() => {
+  const session = localStorage.getItem('admin_session');
+  if (session && (Date.now() - parseInt(session)) < 12 * 60 * 60 * 1000) {
+    enterApp();
+  }
+});
 
 // Zera badge quando o dono abre/foca o app
 document.addEventListener('visibilitychange', () => { if (!document.hidden) clearBadge(); });
