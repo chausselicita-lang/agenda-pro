@@ -1474,14 +1474,15 @@ function openWhatsApp(phone, name, service, time) {
 
 // ── INSTALL PROMPT ──
 let _deferredPrompt = null;
+let _bannerDismissed = false;
 
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   _deferredPrompt = e;
-  if (!localStorage.getItem('admin-pwa-dismissed')) {
+  if (!_bannerDismissed) {
     setTimeout(() => {
       document.getElementById('install-banner').classList.add('visible');
-    }, 4000);
+    }, 3000);
   }
 });
 
@@ -1496,7 +1497,7 @@ function doInstall() {
 
 function dismissInstall() {
   document.getElementById('install-banner').classList.remove('visible');
-  localStorage.setItem('admin-pwa-dismissed', '1');
+  _bannerDismissed = true;
 }
 
 window.addEventListener('appinstalled', () => dismissInstall());
