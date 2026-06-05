@@ -1030,11 +1030,17 @@ function changeMonth(offset) {
 }
 
 function renderCalendar() {
+  const now = new Date();
   const today = new Date(); today.setHours(0,0,0,0);
   const todayStr = today.toISOString().split('T')[0];
   const isCurrentMonth = calYear === today.getFullYear() && calMonth === today.getMonth();
   document.getElementById('btn-prev').disabled = isCurrentMonth;
   document.getElementById('cal-title').textContent = `${MONTH_NAMES[calMonth]} ${calYear}`;
+
+  const toMins = t => { const [h,m] = t.split(':').map(Number); return h*60+m; };
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+  const lastSlotMins = timeSlots.length > 0 ? toMins(timeSlots[timeSlots.length - 1]) : 0;
+  const todayExpired = nowMins >= lastSlotMins;
 
   const firstDay = new Date(calYear, calMonth, 1).getDay();
   const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
@@ -1044,8 +1050,8 @@ function renderCalendar() {
   for (let d = 1; d <= daysInMonth; d++) {
     const ds = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dayDate = new Date(calYear, calMonth, d);
-    const isPast = dayDate < today;
     const isToday = ds === todayStr;
+    const isPast = dayDate < today || (isToday && todayExpired);
     const isSelected = ds === sel.date;
     let cls = 'cal-day';
     if (isPast) cls += ' dis';
@@ -1096,8 +1102,16 @@ async function renderTimes() {
     const { data } = await tq;
     if (data) booked = data.map(b => b.booking_time);
   } catch(e) {}
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const isToday = sel.date === todayStr;
+  const toMins = t => { const [h,m] = t.split(':').map(Number); return h*60+m; };
+  const nowMins = isToday ? (new Date().getHours() * 60 + new Date().getMinutes()) : -1;
+
   grid.innerHTML = timeSlots.map(h => {
+    const isPast = isToday && toMins(h) <= nowMins;
     const occ = booked.includes(h);
+    if (isPast) return `<button class="time-pill occ" disabled>${h}<br><small style="font-size:11px;opacity:0.7">Passado</small></button>`;
     return `<button class="time-pill ${occ ? 'occ' : ''}" ${occ ? 'disabled' : `onclick="pickTime('${h}',this)"`}>${occ ? h + '<br><small style="font-size:11px;opacity:0.7">Ocupado</small>' : h}</button>`;
   }).join('');
 }
