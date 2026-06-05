@@ -1188,7 +1188,8 @@ async function loadConfig() {
 function applyConfig() {
   document.getElementById('cfg-salon-name').value = config.salonName;
   document.getElementById('header-salon-name').textContent = config.salonName;
-  document.getElementById('login-salon-name').textContent = config.salonName;
+  const lsn = document.getElementById('login-salon-name');
+  if (lsn) lsn.textContent = config.salonName;
   applyColors(config.primaryColor || '#9b2335', config.secondaryColor || '#c94070');
   initTimeSelects();
   renderServicesConfig();
