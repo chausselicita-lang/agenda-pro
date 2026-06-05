@@ -842,11 +842,12 @@
 <div id="login-screen">
   <div class="login-card">
     <div class="login-icon">✂️</div>
-    <div class="login-title" id="login-salon-name">AgendaPro</div>
+    <div class="login-title">AgendaPro</div>
     <div class="login-sub">Painel de Gestão</div>
+    <input type="text" class="login-field" id="login-salon" placeholder="Nome do seu salão" onkeydown="if(event.key==='Enter')login()">
     <input type="password" class="login-field" id="login-pass" placeholder="Senha de acesso" onkeydown="if(event.key==='Enter')login()">
     <button class="login-btn" onclick="login()">Entrar no Painel</button>
-    <div class="login-error" id="login-error" style="display:none">Senha incorreta. Tente novamente.</div>
+    <div class="login-error" id="login-error" style="display:none">Nome do salão ou senha incorretos.</div>
   </div>
 </div>
 
@@ -1037,7 +1038,7 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 function gerarSlug(nome) {
   return nome.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-').replace(/-+/g,'-').substring(0,40);
 }
-const SALON_SLUG = new URLSearchParams(window.location.search).get('salao') || localStorage.getItem('agendapro_slug') || '';
+let SALON_SLUG = new URLSearchParams(window.location.search).get('salao') || localStorage.getItem('agendapro_slug') || '';
 
 const DAYS_FULL = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 const MONTHS = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
@@ -1186,6 +1187,7 @@ async function saveConfig() {
 function enterApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
+  document.getElementById('header-salon-name').textContent = config.salonName;
   clearBadge();
   loadBookings();
   setupRealtime();
@@ -1195,14 +1197,24 @@ function enterApp() {
 }
 
 async function login() {
-  await loadConfig();
+  const salonInput = document.getElementById('login-salon').value.trim();
   const pass = document.getElementById('login-pass').value.trim();
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+
+  if (!salonInput) { errEl.style.display = 'block'; return; }
+
+  // Deriva o slug do nome digitado e carrega a config desse salão
+  SALON_SLUG = gerarSlug(salonInput);
+  localStorage.setItem('agendapro_slug', SALON_SLUG);
+  await loadConfig();
+
   const senha = config.password || 'bella123';
   if (pass === senha || pass === 'bella123') {
     localStorage.setItem('admin_session', Date.now().toString());
     enterApp();
   } else {
-    document.getElementById('login-error').style.display = 'block';
+    errEl.style.display = 'block';
   }
 }
 
@@ -1572,11 +1584,11 @@ function renderRelatorios() {
     </div>`;
 }
 
-// Restaura sessão se ainda válida (12 horas)
+// Pré-preenche o nome do salão se já conhecido (via URL ou localStorage)
 loadConfig().then(() => {
-  const session = localStorage.getItem('admin_session');
-  if (session && (Date.now() - parseInt(session)) < 12 * 60 * 60 * 1000) {
-    enterApp();
+  if (SALON_SLUG) {
+    const field = document.getElementById('login-salon');
+    if (field) field.value = config.salonName || SALON_SLUG;
   }
 });
 
