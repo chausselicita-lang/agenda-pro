@@ -1219,6 +1219,8 @@ async function saveConfig() {
   } catch(e) { alert('Erro ao salvar: ' + e.message); }
 }
 
+let currentTab = 'agenda';
+
 function enterApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
@@ -1227,8 +1229,11 @@ function enterApp() {
   loadBookings();
   setupRealtime();
   requestNotificationPermission();
+  history.replaceState({ tab: 'agenda', inApp: true }, '');
   const tabParam = new URLSearchParams(window.location.search).get('tab');
-  if (tabParam && ['agenda','todos','relatorios','config'].includes(tabParam)) showTab(tabParam);
+  if (tabParam && ['agenda','todos','relatorios','config'].includes(tabParam)) {
+    showTab(tabParam);
+  }
 }
 
 async function login() {
@@ -1291,7 +1296,8 @@ function logout() {
   document.getElementById('login-pass').value = '';
 }
 
-function showTab(tab) {
+function showTab(tab, fromHistory = false) {
+  currentTab = tab;
   document.querySelectorAll('.nav-tab').forEach((t,i) => {
     t.classList.remove('active');
     if (['agenda','todos','relatorios','config'][i] === tab) t.classList.add('active');
@@ -1299,7 +1305,18 @@ function showTab(tab) {
   document.querySelectorAll('.tab-pane').forEach(c => c.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
   if (tab === 'relatorios') renderRelatorios();
+  if (!fromHistory) history.pushState({ tab, inApp: true }, '');
 }
+
+window.addEventListener('popstate', e => {
+  if (document.getElementById('app').style.display === 'block') {
+    if (e.state && e.state.inApp && e.state.tab) {
+      showTab(e.state.tab, true);
+    } else {
+      history.pushState({ tab: currentTab, inApp: true }, '');
+    }
+  }
+});
 
 function setupRealtime() {
   const filter = SALON_SLUG ? `salon_slug=eq.${SALON_SLUG}` : undefined;
