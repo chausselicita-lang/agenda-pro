@@ -1251,7 +1251,7 @@ async function login() {
 
   const senha = config.password || 'bella123';
   if (pass === senha || pass === 'bella123') {
-    localStorage.setItem('admin_session', Date.now().toString());
+    localStorage.setItem('admin_session', '1');
     enterApp();
   } else {
     errEl.style.display = 'block';
@@ -1637,10 +1637,9 @@ function renderRelatorios() {
     </div>`;
 }
 
-// Restaura sessão se ainda válida (12h)
+// Restaura sessão permanente (válida até clicar "Sair")
 loadConfig().then(() => {
-  const session = localStorage.getItem('admin_session');
-  if (SALON_SLUG && session && (Date.now() - parseInt(session)) < 12 * 60 * 60 * 1000) {
+  if (SALON_SLUG && localStorage.getItem('admin_session')) {
     enterApp();
   }
 });
