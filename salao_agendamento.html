@@ -1054,7 +1054,7 @@ function renderCalendar() {
   for (let d = 1; d <= daysInMonth; d++) {
     const ds = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dayDate = new Date(calYear, calMonth, d);
-    const isToday = ds === todayStr;
+    const isToday = calYear === today.getFullYear() && calMonth === today.getMonth() && d === today.getDate();
     const isPast = dayDate < today || (isToday && todayExpired);
     const isSelected = ds === sel.date;
     let cls = 'cal-day';
@@ -1107,13 +1107,14 @@ async function renderTimes() {
     if (data) booked = data.map(b => b.booking_time);
   } catch(e) {}
 
-  const todayStr = localDateStr(new Date());
-  const isToday = sel.date === todayStr;
+  const _n = new Date();
+  const _p = sel.date.split('-').map(Number);
+  const isToday = _p[0] === _n.getFullYear() && _p[1] === (_n.getMonth()+1) && _p[2] === _n.getDate();
   const toMins = t => { const [h,m] = t.split(':').map(Number); return h*60+m; };
-  const nowMins = isToday ? (new Date().getHours() * 60 + new Date().getMinutes()) : -1;
+  const nowMins = isToday ? (_n.getHours() * 60 + _n.getMinutes()) : -1;
 
   grid.innerHTML = timeSlots.map(h => {
-    const isPast = isToday && toMins(h) <= nowMins;
+    const isPast = isToday && toMins(h) < nowMins;
     const occ = booked.includes(h);
     if (isPast) return `<button class="time-pill occ" disabled>${h}<br><small style="font-size:11px;opacity:0.7">Passado</small></button>`;
     return `<button class="time-pill ${occ ? 'occ' : ''}" ${occ ? 'disabled' : `onclick="pickTime('${h}',this)"`}>${occ ? h + '<br><small style="font-size:11px;opacity:0.7">Ocupado</small>' : h}</button>`;
