@@ -1034,6 +1034,11 @@ const SUPABASE_KEY = 'sb_publishable_o5ibiwWTvnZ8gXfdJQkFqA_jKZhTiGU';
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+function gerarSlug(nome) {
+  return nome.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-').replace(/-+/g,'-').substring(0,40);
+}
+const SALON_SLUG = new URLSearchParams(window.location.search).get('salao') || localStorage.getItem('agendapro_slug') || '';
+
 const DAYS_FULL = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 const MONTHS = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 
@@ -1134,7 +1139,12 @@ function removeService(i) { config.services.splice(i,1); renderServicesConfig();
 
 async function loadConfig() {
   try {
-    const { data } = await db.from('settings').select('value').eq('key','config').single();
+    const configKey = SALON_SLUG ? `config-${SALON_SLUG}` : 'config';
+    let { data } = await db.from('settings').select('value').eq('key', configKey).single();
+    if (!data && SALON_SLUG) {
+      const fb = await db.from('settings').select('value').eq('key','config').single();
+      data = fb.data;
+    }
     if (data && data.value) config = { ...config, ...JSON.parse(data.value) };
   } catch(e) {}
   applyConfig();
@@ -1163,7 +1173,8 @@ async function saveConfig() {
   config.pixKey = document.getElementById('cfg-pix-key').value.trim();
   config.cardLink = document.getElementById('cfg-card-link').value.trim();
   try {
-    await db.from('settings').upsert({ key: 'config', value: JSON.stringify(config) });
+    const configKey = SALON_SLUG ? `config-${SALON_SLUG}` : 'config';
+    await db.from('settings').upsert({ key: configKey, value: JSON.stringify(config) });
     document.getElementById('header-salon-name').textContent = config.salonName;
     applyColors(config.primaryColor, config.secondaryColor);
     const t = document.getElementById('save-success');
@@ -1244,15 +1255,19 @@ function showTab(tab) {
 }
 
 function setupRealtime() {
+  const filter = SALON_SLUG ? `salon_slug=eq.${SALON_SLUG}` : undefined;
+  const opts = filter
+    ? { event: '*', schema: 'public', table: 'bookings', filter }
+    : { event: '*', schema: 'public', table: 'bookings' };
   realtimeChannel = db.channel('bookings-rt')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bookings' }, payload => {
+    .on('postgres_changes', { ...opts, event: 'INSERT' }, payload => {
       newBadgeCount++;
       setBadge(newBadgeCount);
       showBookingNotification(payload.new);
       loadBookings();
     })
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'bookings' }, () => loadBookings())
-    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'bookings' }, () => loadBookings())
+    .on('postgres_changes', { ...opts, event: 'UPDATE' }, () => loadBookings())
+    .on('postgres_changes', { ...opts, event: 'DELETE' }, () => loadBookings())
     .subscribe();
 }
 
@@ -1280,7 +1295,9 @@ async function showBookingNotification(booking) {
 
 async function loadBookings() {
   try {
-    const { data, error } = await db.from('bookings').select('*').order('booking_date').order('booking_time');
+    let q = db.from('bookings').select('*').order('booking_date').order('booking_time');
+    if (SALON_SLUG) q = q.eq('salon_slug', SALON_SLUG);
+    const { data, error } = await q;
     if (error) throw error;
     allBookings = data || [];
     updateStats(); renderAgenda(); renderTodos();

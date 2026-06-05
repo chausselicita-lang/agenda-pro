@@ -291,9 +291,15 @@
         <div class="link-label">Seu link de agendamento</div>
         <div class="link-url" id="link-gerado"></div>
       </div>
+      <button class="btn-copy" onclick="copiarLink()">📋 Copiar link do cliente</button>
 
-      <button class="btn-copy" onclick="copiarLink()">📋 Copiar link</button>
-      <a class="btn-acess" id="btn-acessar" href="#" target="_blank">Acessar minha agenda →</a>
+      <div class="link-box" style="margin-top:10px">
+        <div class="link-label">Seu painel administrativo</div>
+        <div class="link-url" id="link-admin"></div>
+      </div>
+      <button class="btn-copy" onclick="copiarAdmin()">📋 Copiar link do painel</button>
+
+      <a class="btn-acess" id="btn-acessar" href="#" target="_blank">Ir para o Painel →</a>
     </div>
 
   </div>
@@ -449,13 +455,15 @@
           'Authorization': `Bearer ${SUPABASE_KEY}`,
           'Prefer': 'resolution=merge-duplicates,return=minimal'
         },
-        body: JSON.stringify({ key: 'config', value: JSON.stringify(adminConfig) })
+        body: JSON.stringify({ key: `config-${slug}`, value: JSON.stringify(adminConfig) })
       });
 
-      // SUCESSO — mostrar link
+      // SUCESSO — mostrar links
       const linkFinal = `${BASE_URL}/salao_agendamento.html?salao=${slug}`;
+      const linkAdmin = `${BASE_URL}/salao_admin.html?salao=${slug}`;
       document.getElementById('link-gerado').textContent = linkFinal;
-      document.getElementById('btn-acessar').href = linkFinal;
+      document.getElementById('link-admin').textContent = linkAdmin;
+      document.getElementById('btn-acessar').href = linkAdmin;
 
       document.getElementById('form-section').style.display = 'none';
       document.getElementById('success-section').classList.add('visible');
@@ -475,13 +483,21 @@
     }
   }
 
-  // Copiar link
   function copiarLink() {
     const link = document.getElementById('link-gerado').textContent;
     navigator.clipboard.writeText(link).then(() => {
-      const btn = document.querySelector('.btn-copy');
-      btn.textContent = '✅ Copiado!';
-      setTimeout(() => btn.textContent = '📋 Copiar link', 2000);
+      const btns = document.querySelectorAll('.btn-copy');
+      btns[0].textContent = '✅ Copiado!';
+      setTimeout(() => btns[0].textContent = '📋 Copiar link do cliente', 2000);
+    });
+  }
+
+  function copiarAdmin() {
+    const link = document.getElementById('link-admin').textContent;
+    navigator.clipboard.writeText(link).then(() => {
+      const btns = document.querySelectorAll('.btn-copy');
+      btns[1].textContent = '✅ Copiado!';
+      setTimeout(() => btns[1].textContent = '📋 Copiar link do painel', 2000);
     });
   }
 

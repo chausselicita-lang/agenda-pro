@@ -943,6 +943,7 @@ const SUPABASE_URL = 'https://zigghtvlmftgjlohuhla.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_o5ibiwWTvnZ8gXfdJQkFqA_jKZhTiGU';
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+const SALON_SLUG = new URLSearchParams(window.location.search).get('salao') || '';
 
 const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const DAYS_SHORT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
@@ -981,7 +982,8 @@ function generateSlots() {
 
 async function loadConfig() {
   try {
-    const { data } = await db.from('settings').select('value').eq('key','config').single();
+    const configKey = SALON_SLUG ? `config-${SALON_SLUG}` : 'config';
+    const { data } = await db.from('settings').select('value').eq('key', configKey).single();
     if (data && data.value) config = { ...config, ...JSON.parse(data.value) };
   } catch(e) {}
   if (config.primaryColor) {
@@ -1089,8 +1091,9 @@ async function renderTimes() {
   grid.innerHTML = `<p style="color:var(--muted-2);font-size:14px;grid-column:span 4;text-align:center;padding:16px">Carregando horários...</p>`;
   let booked = [];
   try {
-    const { data } = await db.from('bookings').select('booking_time')
-      .eq('booking_date', sel.date).eq('status','agendado');
+    let tq = db.from('bookings').select('booking_time').eq('booking_date', sel.date).eq('status','agendado');
+    if (SALON_SLUG) tq = tq.eq('salon_slug', SALON_SLUG);
+    const { data } = await tq;
     if (data) booked = data.map(b => b.booking_time);
   } catch(e) {}
   grid.innerHTML = timeSlots.map(h => {
@@ -1249,8 +1252,9 @@ async function confirmBooking() {
   const name = document.getElementById('client-name').value.trim();
   const phone = document.getElementById('client-phone').value.trim();
   try {
-    const { data } = await db.from('bookings').select('id')
-      .eq('booking_date', sel.date).eq('booking_time', sel.time).eq('status','agendado');
+    let cq = db.from('bookings').select('id').eq('booking_date', sel.date).eq('booking_time', sel.time).eq('status','agendado');
+    if (SALON_SLUG) cq = cq.eq('salon_slug', SALON_SLUG);
+    const { data } = await cq;
     if (data && data.length > 0) {
       alert('Este horário acabou de ser ocupado! Escolha outro.');
       btn.disabled = false; btn.textContent = 'Confirmar →';
@@ -1265,7 +1269,8 @@ async function confirmBooking() {
       service_price: sel.service.price,
       booking_date: sel.date, booking_time: sel.time,
       status: 'agendado', code,
-      payment_method: sel.paymentMethod === 'pix' ? 'pix_pending' : sel.paymentMethod === 'cartao' ? 'cartao_pending' : 'pendente'
+      payment_method: sel.paymentMethod === 'pix' ? 'pix_pending' : sel.paymentMethod === 'cartao' ? 'cartao_pending' : 'pendente',
+      salon_slug: SALON_SLUG || null
     });
     if (error) throw error;
     document.getElementById('booking-code').textContent = code;
