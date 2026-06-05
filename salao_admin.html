@@ -1619,11 +1619,15 @@ function renderRelatorios() {
     </div>`;
 }
 
-// Pré-preenche o nome do salão se já conhecido (via URL ou localStorage)
+// Pré-preenche nome e restaura sessão se ainda válida (12h)
 loadConfig().then(() => {
   if (SALON_SLUG) {
     const field = document.getElementById('login-salon');
     if (field) field.value = config.salonName || SALON_SLUG;
+  }
+  const session = localStorage.getItem('admin_session');
+  if (SALON_SLUG && session && (Date.now() - parseInt(session)) < 12 * 60 * 60 * 1000) {
+    enterApp();
   }
 });
 
