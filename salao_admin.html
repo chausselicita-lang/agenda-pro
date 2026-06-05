@@ -1360,7 +1360,7 @@ async function showBookingNotification(booking) {
 async function loadBookings() {
   try {
     let q = db.from('bookings').select('*').order('booking_date').order('booking_time');
-    if (SALON_SLUG) q = q.eq('salon_slug', SALON_SLUG);
+    if (SALON_SLUG) q = q.or(`salon_slug.eq.${SALON_SLUG},salon_slug.is.null`);
     const { data, error } = await q;
     if (error) throw error;
     allBookings = data || [];
