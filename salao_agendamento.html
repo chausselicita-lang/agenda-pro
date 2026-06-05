@@ -1029,10 +1029,14 @@ function changeMonth(offset) {
   renderCalendar();
 }
 
+function localDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
 function renderCalendar() {
   const now = new Date();
   const today = new Date(); today.setHours(0,0,0,0);
-  const todayStr = today.toISOString().split('T')[0];
+  const todayStr = localDateStr(now);
   const isCurrentMonth = calYear === today.getFullYear() && calMonth === today.getMonth();
   document.getElementById('btn-prev').disabled = isCurrentMonth;
   document.getElementById('cal-title').textContent = `${MONTH_NAMES[calMonth]} ${calYear}`;
@@ -1103,7 +1107,7 @@ async function renderTimes() {
     if (data) booked = data.map(b => b.booking_time);
   } catch(e) {}
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = localDateStr(new Date());
   const isToday = sel.date === todayStr;
   const toMins = t => { const [h,m] = t.split(':').map(Number); return h*60+m; };
   const nowMins = isToday ? (new Date().getHours() * 60 + new Date().getMinutes()) : -1;
