@@ -1102,7 +1102,11 @@ async function renderTimes() {
   let booked = [];
   try {
     let tq = db.from('bookings').select('booking_time').eq('booking_date', sel.date).eq('status','agendado');
-    if (SALON_SLUG) tq = tq.eq('salon_slug', SALON_SLUG);
+    if (SALON_SLUG) {
+      tq = tq.eq('salon_slug', SALON_SLUG);
+    } else {
+      tq = tq.is('salon_slug', null);
+    }
     const { data } = await tq;
     if (data) booked = data.map(b => b.booking_time);
   } catch(e) {}
@@ -1272,7 +1276,7 @@ async function confirmBooking() {
   const phone = document.getElementById('client-phone').value.trim();
   try {
     let cq = db.from('bookings').select('id').eq('booking_date', sel.date).eq('booking_time', sel.time).eq('status','agendado');
-    if (SALON_SLUG) cq = cq.eq('salon_slug', SALON_SLUG);
+    if (SALON_SLUG) { cq = cq.eq('salon_slug', SALON_SLUG); } else { cq = cq.is('salon_slug', null); }
     const { data } = await cq;
     if (data && data.length > 0) {
       alert('Este horário acabou de ser ocupado! Escolha outro.');
