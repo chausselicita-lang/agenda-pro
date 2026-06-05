@@ -470,6 +470,7 @@
 
       localStorage.setItem('agendapro_slug', slug);
       localStorage.setItem('agendapro_nome', nome);
+      localStorage.setItem('admin_session', '1');
 
       if (installPrompt) {
         setTimeout(() => { installPrompt.prompt(); installPrompt = null; }, 1500);
