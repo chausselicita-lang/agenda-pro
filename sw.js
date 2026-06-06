@@ -1,4 +1,4 @@
-const CACHE = 'agendapro-v10';
+const CACHE = 'agendapro-v11';
 
 // Arquivos HTML — sempre buscados na rede (network-first)
 const HTML_FILES = [
