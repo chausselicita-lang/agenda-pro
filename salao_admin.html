@@ -857,9 +857,319 @@
     .svc-rank:first-child .svc-rank-fill { background: linear-gradient(90deg, var(--indigo), var(--violet)); }
     .svc-rank:first-child .svc-rank-name { color: var(--text); font-weight: 600; }
     .svc-rank:first-child .svc-rank-count { color: #818CF8; }
+
+    /* ── CRM: CLIENTES ── */
+    .crm-header {
+      position: sticky; top: 0; z-index: 10;
+      background: var(--bg);
+      padding: 12px 0 4px;
+      margin-bottom: 4px;
+    }
+
+    .crm-search-wrap { position: relative; margin-bottom: 10px; }
+
+    .crm-search-icon {
+      position: absolute; left: 13px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px; pointer-events: none; opacity: 0.45;
+    }
+
+    .crm-search {
+      width: 100%; padding: 12px 14px 12px 38px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border-2);
+      border-radius: 12px; color: var(--text);
+      font-size: 15px; outline: none;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+    }
+
+    .crm-search::placeholder { color: var(--muted-2); }
+
+    .crm-search:focus {
+      border-color: var(--indigo);
+      background: rgba(99,102,241,0.05);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    }
+
+    .crm-count {
+      font-size: 12px; color: var(--muted-2);
+      font-weight: 500; margin: 0 0 10px; padding-top: 2px;
+    }
+
+    .client-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r); padding: 14px 14px 14px 16px;
+      margin-bottom: 8px; cursor: pointer;
+      transition: all 0.2s;
+      display: flex; gap: 13px; align-items: flex-start;
+    }
+
+    .client-card:hover { border-color: var(--border-2); background: var(--surface-hover); }
+    .client-card:active { transform: scale(0.99); }
+
+    .client-avatar {
+      width: 44px; height: 44px; border-radius: 13px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 15px; font-weight: 800; color: white;
+      flex-shrink: 0; letter-spacing: -0.01em;
+    }
+
+    .client-main { flex: 1; min-width: 0; }
+
+    .client-name-row {
+      display: flex; align-items: center; gap: 7px; margin-bottom: 2px;
+    }
+
+    .client-name {
+      font-size: 15px; font-weight: 600; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 180px;
+    }
+
+    .client-badge {
+      font-size: 10px; font-weight: 700;
+      padding: 2px 7px; border-radius: 100px;
+      letter-spacing: 0.03em; white-space: nowrap; flex-shrink: 0;
+    }
+
+    .badge-novo    { background: rgba(59,130,246,0.12); color: #60A5FA; border: 1px solid rgba(59,130,246,0.2); }
+    .badge-regular { background: rgba(16,185,129,0.1);  color: #34D399; border: 1px solid rgba(16,185,129,0.2); }
+    .badge-vip     { background: rgba(245,158,11,0.12); color: #FBBF24; border: 1px solid rgba(245,158,11,0.25); }
+    .badge-inativo { background: rgba(71,85,105,0.1);   color: var(--muted-2); border: 1px solid rgba(71,85,105,0.2); }
+
+    .client-phone { font-size: 12px; color: var(--muted-2); margin-bottom: 9px; }
+
+    .client-metrics { display: flex; gap: 14px; }
+
+    .client-metric-val { font-size: 14px; font-weight: 700; color: var(--text); }
+    .client-metric-lbl { font-size: 10px; color: var(--muted-2); margin-top: 1px; text-transform: uppercase; letter-spacing: 0.03em; }
+
+    .client-note-preview {
+      font-size: 12px; color: var(--muted);
+      margin-top: 8px; padding-top: 8px;
+      border-top: 1px solid var(--border);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      font-style: italic;
+    }
+
+    .client-arrow {
+      color: var(--muted-2); font-size: 18px;
+      align-self: center; flex-shrink: 0;
+      transition: transform 0.2s; line-height: 1;
+    }
+
+    .client-card:hover .client-arrow { transform: translateX(3px); }
+
+    /* CLIENT SHEET */
+    .client-sheet-overlay {
+      position: fixed; inset: 0; z-index: 500;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .client-sheet-overlay.visible { opacity: 1; pointer-events: all; }
+
+    .client-sheet {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 501;
+      background: #0C0F18;
+      border-top: 1px solid var(--border-2);
+      border-radius: 24px 24px 0 0;
+      max-height: 90vh; overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform 0.4s cubic-bezier(0.22,1,0.36,1);
+      box-shadow: 0 -24px 80px rgba(0,0,0,0.7);
+      scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+    }
+
+    .client-sheet.open { transform: translateY(0); }
+
+    .sheet-handle {
+      width: 36px; height: 4px;
+      background: var(--border-2); border-radius: 100px;
+      margin: 14px auto 0;
+    }
+
+    .sheet-header {
+      padding: 18px 20px 16px;
+      display: flex; align-items: center; gap: 14px;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 1;
+      background: #0C0F18;
+    }
+
+    .sheet-avatar {
+      width: 52px; height: 52px; border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 20px; font-weight: 800; color: white; flex-shrink: 0;
+    }
+
+    .sheet-client-info { flex: 1; min-width: 0; }
+
+    .sheet-client-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px; font-weight: 800; color: var(--text);
+      letter-spacing: -0.02em;
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+
+    .sheet-client-phone { font-size: 13px; color: var(--muted-2); margin-top: 3px; }
+
+    .sheet-close {
+      background: var(--surface);
+      border: 1px solid var(--border-2);
+      color: var(--muted); padding: 8px 12px;
+      border-radius: 10px; cursor: pointer; font-size: 15px;
+      font-family: 'Inter', sans-serif; transition: all 0.2s;
+      flex-shrink: 0; line-height: 1;
+    }
+
+    .sheet-close:hover { color: var(--text); background: var(--surface-hover); }
+
+    .sheet-body { padding: 18px 20px 36px; }
+
+    .sheet-metrics {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 8px;
+      margin-bottom: 22px;
+    }
+
+    .sheet-metric {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 10px; text-align: center;
+    }
+
+    .sheet-metric-val {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px; font-weight: 800;
+      color: var(--text); letter-spacing: -0.02em;
+    }
+
+    .sheet-metric-val.green  { color: #34D399; }
+    .sheet-metric-val.accent { color: #A5B4FC; }
+
+    .sheet-metric-lbl {
+      font-size: 10px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--muted); margin-top: 5px;
+    }
+
+    .sheet-section { margin-bottom: 22px; }
+
+    .sheet-section-ttl {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--muted);
+      margin-bottom: 10px;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .sheet-section-ttl::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    .notes-textarea {
+      width: 100%; min-height: 96px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border-2);
+      border-radius: 12px; color: var(--text);
+      font-size: 14px; padding: 13px 14px;
+      outline: none; resize: vertical;
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6; transition: all 0.2s;
+    }
+
+    .notes-textarea::placeholder { color: var(--muted-2); }
+
+    .notes-textarea:focus {
+      border-color: var(--indigo);
+      background: rgba(99,102,241,0.05);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    }
+
+    .save-note-btn {
+      padding: 10px 18px;
+      background: linear-gradient(135deg, var(--indigo), var(--violet));
+      color: white; border: none; border-radius: 10px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      font-family: 'Inter', sans-serif; transition: all 0.2s;
+      box-shadow: 0 4px 14px rgba(99,102,241,0.3);
+    }
+
+    .save-note-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99,102,241,0.4); }
+
+    .note-saved { color: var(--success); font-size: 12px; margin-left: 10px; font-weight: 600; }
+
+    .history-item {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 14px;
+      margin-bottom: 8px;
+      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    }
+
+    .hist-left { flex: 1; min-width: 0; }
+
+    .hist-svc {
+      font-size: 14px; font-weight: 600; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .hist-date { font-size: 12px; color: var(--muted-2); margin-top: 3px; }
+    .hist-right { text-align: right; flex-shrink: 0; }
+    .hist-price { font-size: 14px; font-weight: 700; color: #34D399; }
+    .hist-status { font-size: 11px; color: var(--muted-2); margin-top: 3px; }
+
+    .crm-empty { text-align: center; padding: 56px 20px; }
+    .crm-empty-ico { font-size: 44px; margin-bottom: 12px; opacity: 0.25; }
+    .crm-empty-msg { font-size: 14px; color: var(--muted-2); }
   </style>
 </head>
 <body>
+
+<!-- CLIENT SHEET -->
+<div class="client-sheet-overlay" id="client-sheet-overlay" onclick="closeClientSheet()"></div>
+<div class="client-sheet" id="client-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-avatar" id="sheet-avatar"></div>
+    <div class="sheet-client-info">
+      <div class="sheet-client-name" id="sheet-client-name">—</div>
+      <div class="sheet-client-phone" id="sheet-client-phone">—</div>
+    </div>
+    <button class="sheet-close" onclick="closeClientSheet()">✕</button>
+  </div>
+  <div class="sheet-body">
+    <div class="sheet-metrics">
+      <div class="sheet-metric">
+        <div class="sheet-metric-val accent" id="sheet-visits">0</div>
+        <div class="sheet-metric-lbl">Visitas</div>
+      </div>
+      <div class="sheet-metric">
+        <div class="sheet-metric-val green" id="sheet-spend">R$0</div>
+        <div class="sheet-metric-lbl">Gasto total</div>
+      </div>
+      <div class="sheet-metric">
+        <div class="sheet-metric-val" id="sheet-since">—</div>
+        <div class="sheet-metric-lbl">Cliente há</div>
+      </div>
+    </div>
+    <div class="sheet-section">
+      <div class="sheet-section-ttl">Observações internas</div>
+      <textarea class="notes-textarea" id="notes-textarea" placeholder="Alergias, preferências, histórico de produtos, observações pessoais..."></textarea>
+      <div style="display:flex;align-items:center;margin-top:8px">
+        <button class="save-note-btn" onclick="saveClientNote()">Salvar nota</button>
+        <span class="note-saved" id="note-saved" style="display:none">✓ Salvo</span>
+      </div>
+    </div>
+    <div class="sheet-section">
+      <div class="sheet-section-ttl">Histórico de visitas</div>
+      <div id="sheet-history"></div>
+    </div>
+  </div>
+</div>
 
 <!-- INSTALL BANNER (admin) -->
 <div class="install-banner" id="install-banner">
@@ -908,6 +1218,7 @@
     <div class="nav-tab active" onclick="showTab('agenda')">📅 Agenda</div>
     <div class="nav-tab" onclick="showTab('todos')">📋 Histórico</div>
     <div class="nav-tab" onclick="showTab('relatorios')">📊 Relatórios</div>
+    <div class="nav-tab" onclick="showTab('clientes')">👤 Clientes</div>
     <div class="nav-tab" onclick="showTab('config')">⚙️ Config</div>
   </div>
 
@@ -934,7 +1245,7 @@
       </div>
 
       <div class="actions">
-        <a class="act-btn main" href="salao_agendamento.html" target="_blank">📱 Página do cliente</a>
+        <a class="act-btn main" id="link-client-page" href="salao_agendamento.html" target="_blank">📱 Página do cliente</a>
         <button class="act-btn ghost" onclick="loadBookings()">↻ Atualizar</button>
       </div>
 
@@ -1061,6 +1372,29 @@
     </div>
   </div>
 
+  <!-- CLIENTES (CRM) -->
+  <div id="tab-clientes" class="tab-pane">
+    <div class="page">
+      <div class="crm-header">
+        <div class="crm-search-wrap">
+          <span class="crm-search-icon">🔍</span>
+          <input type="text" class="crm-search" id="crm-search"
+            placeholder="Buscar por nome ou telefone..."
+            oninput="searchClientes(this.value)">
+        </div>
+        <div class="filters" id="crm-filters">
+          <button class="fpill active" onclick="filterClientes('todos',this)">Todos</button>
+          <button class="fpill" onclick="filterClientes('novo',this)">🆕 Novos</button>
+          <button class="fpill" onclick="filterClientes('regular',this)">Regular</button>
+          <button class="fpill" onclick="filterClientes('vip',this)">⭐ VIP</button>
+          <button class="fpill" onclick="filterClientes('inativo',this)">Inativos</button>
+        </div>
+        <div class="crm-count" id="crm-count"></div>
+      </div>
+      <div id="clients-list"></div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -1126,7 +1460,10 @@ function setFilter(filter, btn) {
 async function zerarHistorico() {
   if (!confirm('Tem certeza? Todos os agendamentos serão apagados permanentemente.')) return;
   try {
-    await db.from('bookings').delete().neq('id','00000000-0000-0000-0000-000000000000');
+    let q = db.from('bookings').delete();
+    if (SALON_SLUG) q = q.eq('salon_slug', SALON_SLUG);
+    else q = q.neq('id','00000000-0000-0000-0000-000000000000');
+    await q;
     allBookings = [];
     updateStats(); renderAgenda(); renderTodos();
     alert('Histórico zerado com sucesso!');
@@ -1225,13 +1562,16 @@ function enterApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('header-salon-name').textContent = config.salonName;
+  const clientLink = document.getElementById('link-client-page');
+  if (clientLink) clientLink.href = SALON_SLUG ? `salao_agendamento.html?salao=${SALON_SLUG}` : 'salao_agendamento.html';
   clearBadge();
   loadBookings();
+  loadClientNotes();
   setupRealtime();
   requestNotificationPermission();
   history.replaceState({ tab: 'agenda', inApp: true }, '');
   const tabParam = new URLSearchParams(window.location.search).get('tab');
-  if (tabParam && ['agenda','todos','relatorios','config'].includes(tabParam)) {
+  if (tabParam && ['agenda','todos','relatorios','clientes','config'].includes(tabParam)) {
     showTab(tabParam);
   }
 }
@@ -1300,11 +1640,12 @@ function showTab(tab, fromHistory = false) {
   currentTab = tab;
   document.querySelectorAll('.nav-tab').forEach((t,i) => {
     t.classList.remove('active');
-    if (['agenda','todos','relatorios','config'][i] === tab) t.classList.add('active');
+    if (['agenda','todos','relatorios','clientes','config'][i] === tab) t.classList.add('active');
   });
   document.querySelectorAll('.tab-pane').forEach(c => c.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
   if (tab === 'relatorios') renderRelatorios();
+  if (tab === 'clientes') renderClientes(activeClientFilter, '');
   if (!fromHistory) history.pushState({ tab, inApp: true }, '');
 }
 
@@ -1379,7 +1720,7 @@ function updateStats() {
   document.getElementById('stat-hoje').textContent = todayB.length;
   document.getElementById('stat-futuros').textContent = futuros.length;
   document.getElementById('stat-total').textContent = allBookings.length;
-  document.getElementById('stat-receita').textContent = 'R$' + receita;
+  document.getElementById('stat-receita').textContent = 'R$ ' + receita.toLocaleString('pt-BR');
 
 }
 
@@ -1636,6 +1977,228 @@ function renderRelatorios() {
       ${svcRows}
     </div>`;
 }
+
+// ── CRM: CLIENTES ──
+let clientNotes = {}, currentClientPhone = null, activeClientFilter = 'todos';
+
+const AVATAR_COLORS = [
+  ['#6366F1','#4F46E5'], ['#8B5CF6','#7C3AED'], ['#EC4899','#DB2777'],
+  ['#14B8A6','#0D9488'], ['#F59E0B','#D97706'], ['#10B981','#059669'],
+  ['#3B82F6','#2563EB'], ['#EF4444','#DC2626'], ['#F97316','#EA580C']
+];
+
+function clientInitials(name) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].substring(0,2).toUpperCase();
+  return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+}
+
+function avatarGradient(name) {
+  let sum = 0;
+  for (const c of name) sum += c.charCodeAt(0);
+  const [c1,c2] = AVATAR_COLORS[sum % AVATAR_COLORS.length];
+  return `linear-gradient(135deg,${c1},${c2})`;
+}
+
+function getClientStatus(client) {
+  const today = new Date().toISOString().split('T')[0];
+  const daysSince = Math.floor((new Date(today+'T12:00:00') - new Date(client.lastVisit+'T12:00:00')) / 86400000);
+  if (daysSince > 90) return 'inativo';
+  if (client.visits >= 8 || client.totalSpend >= 500) return 'vip';
+  if (client.visits >= 3 && daysSince <= 60) return 'regular';
+  return 'novo';
+}
+
+const STATUS_CFG = {
+  novo:    { label: 'Novo',    cls: 'badge-novo' },
+  regular: { label: 'Regular', cls: 'badge-regular' },
+  vip:     { label: 'VIP ⭐',  cls: 'badge-vip' },
+  inativo: { label: 'Inativo', cls: 'badge-inativo' }
+};
+
+function buildClientDatabase() {
+  const map = {};
+  allBookings.forEach(b => {
+    const key = (b.client_phone || '').trim() || b.client_name;
+    if (!map[key]) {
+      map[key] = {
+        name: b.client_name,
+        phone: (b.client_phone || '').trim(),
+        bookings: [], visits: 0, totalSpend: 0,
+        firstVisit: b.booking_date, lastVisit: b.booking_date
+      };
+    }
+    map[key].bookings.push(b);
+    if (b.status === 'concluido') {
+      map[key].visits++;
+      map[key].totalSpend += (b.service_price || 0);
+    }
+    if (b.booking_date > map[key].lastVisit) map[key].lastVisit = b.booking_date;
+    if (b.booking_date < map[key].firstVisit) map[key].firstVisit = b.booking_date;
+  });
+  return Object.values(map).sort((a,b) => b.lastVisit.localeCompare(a.lastVisit));
+}
+
+function daysSinceLabel(dateStr) {
+  const days = Math.floor((new Date() - new Date(dateStr+'T12:00:00')) / 86400000);
+  if (days === 0) return 'hoje';
+  if (days === 1) return 'ontem';
+  if (days < 7)  return `${days}d atrás`;
+  if (days < 30) return `${Math.floor(days/7)}sem atrás`;
+  if (days < 365) return `${Math.floor(days/30)}m atrás`;
+  return `${Math.floor(days/365)}a atrás`;
+}
+
+function clientAgeLabel(dateStr) {
+  const days = Math.floor((new Date() - new Date(dateStr+'T12:00:00')) / 86400000);
+  if (days < 7)   return `${days}d`;
+  if (days < 30)  return `${Math.floor(days/7)} sem`;
+  if (days < 365) return `${Math.floor(days/30)} mes`;
+  const y = Math.floor(days/365);
+  return `${y} ano${y>1?'s':''}`;
+}
+
+async function loadClientNotes() {
+  try {
+    const key = SALON_SLUG ? `client-notes-${SALON_SLUG}` : 'client-notes';
+    const { data } = await db.from('settings').select('value').eq('key', key).single();
+    if (data && data.value) clientNotes = JSON.parse(data.value);
+  } catch(e) { clientNotes = {}; }
+}
+
+async function saveClientNote() {
+  if (!currentClientPhone) return;
+  const note = document.getElementById('notes-textarea').value;
+  clientNotes[currentClientPhone] = note;
+  try {
+    const key = SALON_SLUG ? `client-notes-${SALON_SLUG}` : 'client-notes';
+    await db.from('settings').upsert({ key, value: JSON.stringify(clientNotes) });
+    const saved = document.getElementById('note-saved');
+    saved.style.display = 'inline';
+    setTimeout(() => { saved.style.display = 'none'; }, 2500);
+    renderClientes(activeClientFilter, (document.getElementById('crm-search')||{}).value||'');
+  } catch(e) { alert('Erro ao salvar nota'); }
+}
+
+function renderClientes(filter, query) {
+  filter = filter || activeClientFilter;
+  query  = (query || '').toLowerCase().trim();
+  let clients = buildClientDatabase();
+  if (query) clients = clients.filter(c =>
+    c.name.toLowerCase().includes(query) || c.phone.includes(query)
+  );
+  if (filter !== 'todos') clients = clients.filter(c => getClientStatus(c) === filter);
+
+  document.getElementById('crm-count').textContent =
+    `${clients.length} cliente${clients.length !== 1 ? 's' : ''}`;
+
+  if (!clients.length) {
+    document.getElementById('clients-list').innerHTML = `
+      <div class="crm-empty">
+        <div class="crm-empty-ico">👤</div>
+        <div class="crm-empty-msg">${query || filter !== 'todos'
+          ? 'Nenhum cliente encontrado para este filtro'
+          : 'Nenhum agendamento cadastrado ainda'}</div>
+      </div>`;
+    return;
+  }
+
+  document.getElementById('clients-list').innerHTML = clients.map(c => {
+    const sc   = STATUS_CFG[getClientStatus(c)];
+    const note = clientNotes[c.phone] || '';
+    const total = c.bookings.filter(b => b.status !== 'cancelado').length;
+    const safePhone = c.phone.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return `
+    <div class="client-card" onclick="openClientSheet('${safePhone}')">
+      <div class="client-avatar" style="background:${avatarGradient(c.name)}">${clientInitials(c.name)}</div>
+      <div class="client-main">
+        <div class="client-name-row">
+          <span class="client-name">${c.name}</span>
+          <span class="client-badge ${sc.cls}">${sc.label}</span>
+        </div>
+        <div class="client-phone">${c.phone || '—'}</div>
+        <div class="client-metrics">
+          <div class="client-metric">
+            <div class="client-metric-val">${total}</div>
+            <div class="client-metric-lbl">Agend.</div>
+          </div>
+          <div class="client-metric">
+            <div class="client-metric-val" style="color:#34D399">R$ ${c.totalSpend.toLocaleString('pt-BR')}</div>
+            <div class="client-metric-lbl">Gasto</div>
+          </div>
+          <div class="client-metric">
+            <div class="client-metric-val">${daysSinceLabel(c.lastVisit)}</div>
+            <div class="client-metric-lbl">Últ. visita</div>
+          </div>
+        </div>
+        ${note ? `<div class="client-note-preview">📝 ${note}</div>` : ''}
+      </div>
+      <div class="client-arrow">›</div>
+    </div>`;
+  }).join('');
+}
+
+function filterClientes(filter, btn) {
+  activeClientFilter = filter;
+  document.querySelectorAll('#crm-filters .fpill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderClientes(filter, (document.getElementById('crm-search')||{}).value||'');
+}
+
+function searchClientes(query) {
+  renderClientes(activeClientFilter, query);
+}
+
+function openClientSheet(phone) {
+  const clients = buildClientDatabase();
+  const client  = clients.find(c => c.phone === phone);
+  if (!client) return;
+  currentClientPhone = phone;
+
+  const sc = STATUS_CFG[getClientStatus(client)];
+  document.getElementById('sheet-avatar').style.background = avatarGradient(client.name);
+  document.getElementById('sheet-avatar').textContent      = clientInitials(client.name);
+  document.getElementById('sheet-client-name').innerHTML   =
+    `${client.name} <span class="client-badge ${sc.cls}" style="font-size:10px">${sc.label}</span>`;
+  document.getElementById('sheet-client-phone').textContent = client.phone || '—';
+  document.getElementById('sheet-visits').textContent       = client.visits;
+  document.getElementById('sheet-spend').textContent        = 'R$ ' + client.totalSpend.toLocaleString('pt-BR');
+  document.getElementById('sheet-since').textContent        = clientAgeLabel(client.firstVisit);
+  document.getElementById('notes-textarea').value           = clientNotes[phone] || '';
+  document.getElementById('note-saved').style.display       = 'none';
+
+  const statusIco = { agendado:'🔵', concluido:'✅', cancelado:'❌' };
+  const sorted = [...client.bookings].sort((a,b) => {
+    if (b.booking_date !== a.booking_date) return b.booking_date.localeCompare(a.booking_date);
+    return b.booking_time.localeCompare(a.booking_time);
+  });
+  document.getElementById('sheet-history').innerHTML = sorted.map(b => `
+    <div class="history-item">
+      <div class="hist-left">
+        <div class="hist-svc">${b.service}</div>
+        <div class="hist-date">${formatDate(b.booking_date)} às ${b.booking_time}</div>
+      </div>
+      <div class="hist-right">
+        ${b.status === 'concluido' ? `<div class="hist-price">R$ ${b.service_price}</div>` : ''}
+        <div class="hist-status">${statusIco[b.status] || ''} ${b.status}</div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('client-sheet-overlay').classList.add('visible');
+  document.getElementById('client-sheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeClientSheet() {
+  document.getElementById('client-sheet-overlay').classList.remove('visible');
+  document.getElementById('client-sheet').classList.remove('open');
+  document.body.style.overflow = '';
+  currentClientPhone = null;
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeClientSheet();
+});
 
 // Restaura sessão permanente (válida até clicar "Sair")
 loadConfig().then(() => {
