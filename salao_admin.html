@@ -1302,6 +1302,10 @@
           <label class="flabel">Nova Senha</label>
           <input type="password" class="finput" id="cfg-password" placeholder="Em branco para manter a atual">
         </div>
+        <div class="fgroup">
+          <label class="flabel">WhatsApp do Salão (com DDD)</label>
+          <input type="tel" class="finput" id="cfg-whatsapp" placeholder="Ex: 73999999999">
+        </div>
       </div>
 
       <div class="cfg-block">
@@ -1362,6 +1366,19 @@
       </div>
 
       <div class="cfg-block">
+        <div class="cfg-ttl"><div class="cfg-ico">🚫</div>Dias Bloqueados</div>
+        <p style="font-size:12px;color:var(--muted-2);margin-bottom:14px">Bloqueie feriados, folgas ou qualquer dia em que o salão não atenderá. Datas bloqueadas não ficam disponíveis no calendário de agendamento.</p>
+        <div class="fgroup">
+          <label class="flabel">Adicionar data</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="date" class="finput" id="blocked-date-input" style="flex:1">
+            <button class="act-btn main" style="width:auto;padding:12px 18px;white-space:nowrap" onclick="addBlockedDate()">+ Bloquear</button>
+          </div>
+        </div>
+        <div id="blocked-dates-list"></div>
+      </div>
+
+      <div class="cfg-block">
         <div class="cfg-ttl"><div class="cfg-ico">⚠️</div>Zona de Perigo</div>
         <p style="font-size:12px;color:var(--muted-2);margin-bottom:14px">Apaga todos os agendamentos permanentemente. Ação irreversível.</p>
         <button class="danger-btn" onclick="zerarHistorico()">Zerar Todos os Agendamentos</button>
@@ -1417,7 +1434,7 @@ let config = {
   startTime: '08:00', endTime: '18:00',
   lunchStart: '12:00', lunchEnd: '13:00',
   interval: 30, primaryColor: '#9b2335', secondaryColor: '#c94070',
-  pixKey: '', cardLink: '',
+  pixKey: '', cardLink: '', whatsappPhone: '',
   services: [
     { name: 'Corte Feminino', icon: '✂️', duration: 60, price: 60 },
     { name: 'Corte Masculino', icon: '💈', duration: 45, price: 45 },
@@ -1532,6 +1549,7 @@ function applyConfig() {
   renderServicesConfig();
   document.getElementById('cfg-pix-key').value = config.pixKey || '';
   document.getElementById('cfg-card-link').value = config.cardLink || '';
+  document.getElementById('cfg-whatsapp').value = config.whatsappPhone || '';
 }
 
 async function saveConfig() {
@@ -1545,6 +1563,7 @@ async function saveConfig() {
   config.interval = parseInt(document.getElementById('cfg-interval').value);
   config.pixKey = document.getElementById('cfg-pix-key').value.trim();
   config.cardLink = document.getElementById('cfg-card-link').value.trim();
+  config.whatsappPhone = document.getElementById('cfg-whatsapp').value.trim();
   try {
     const configKey = SALON_SLUG ? `config-${SALON_SLUG}` : 'config';
     await db.from('settings').upsert({ key: configKey, value: JSON.stringify(config) });
@@ -1567,6 +1586,7 @@ function enterApp() {
   clearBadge();
   loadBookings();
   loadClientNotes();
+  loadBlockedDates();
   setupRealtime();
   requestNotificationPermission();
   history.replaceState({ tab: 'agenda', inApp: true }, '');
@@ -1677,8 +1697,11 @@ function setupRealtime() {
 }
 
 async function requestNotificationPermission() {
-  if (!('Notification' in window) || Notification.permission !== 'default') return;
-  await Notification.requestPermission();
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'granted') { subscribeToPush(); return; }
+  if (Notification.permission !== 'default') return;
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') subscribeToPush();
 }
 
 async function showBookingNotification(booking) {
@@ -1976,6 +1999,84 @@ function renderRelatorios() {
       <div class="sec-hdr">⭐ Serviços mais agendados</div>
       ${svcRows}
     </div>`;
+}
+
+// ── DIAS BLOQUEADOS ──
+let blockedDates = [];
+
+async function loadBlockedDates() {
+  try {
+    const key = SALON_SLUG ? `blocked-dates-${SALON_SLUG}` : 'blocked-dates';
+    const { data } = await db.from('settings').select('value').eq('key', key).single();
+    if (data && data.value) blockedDates = JSON.parse(data.value);
+  } catch(e) { blockedDates = []; }
+  renderBlockedDates();
+}
+
+async function saveBlockedDates() {
+  try {
+    const key = SALON_SLUG ? `blocked-dates-${SALON_SLUG}` : 'blocked-dates';
+    await db.from('settings').upsert({ key, value: JSON.stringify(blockedDates) });
+  } catch(e) { alert('Erro ao salvar datas: ' + e.message); }
+}
+
+function renderBlockedDates() {
+  const el = document.getElementById('blocked-dates-list');
+  if (!el) return;
+  if (!blockedDates.length) {
+    el.innerHTML = '<p style="font-size:13px;color:var(--muted-2);text-align:center;padding:10px 0">Nenhuma data bloqueada</p>';
+    return;
+  }
+  const sorted = [...blockedDates].sort();
+  el.innerHTML = sorted.map(d => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.15);border-radius:10px;margin-bottom:6px">
+      <span style="font-size:14px;font-weight:500;color:var(--text)">🚫 ${formatDate(d)}</span>
+      <button class="rm-btn" onclick="removeBlockedDate('${d}')">✕</button>
+    </div>`).join('');
+}
+
+async function addBlockedDate() {
+  const input = document.getElementById('blocked-date-input');
+  const date = input.value;
+  if (!date) { alert('Selecione uma data.'); return; }
+  if (!blockedDates.includes(date)) {
+    blockedDates.push(date);
+    await saveBlockedDates();
+    renderBlockedDates();
+  }
+  input.value = '';
+}
+
+async function removeBlockedDate(date) {
+  blockedDates = blockedDates.filter(d => d !== date);
+  await saveBlockedDates();
+  renderBlockedDates();
+}
+
+// ── WEB PUSH (VAPID) ──
+const VAPID_PUBLIC_KEY = 'BKlT6oamfZUIhcr9Hio4Z5Gsbay945j3QrhsHp-PJ85N-M3UWJPiCjN3sKk9d-UYHgAl7ohc-xmkJw4yhA0X3GA';
+
+function urlBase64ToUint8Array(b64) {
+  const pad = '='.repeat((4 - b64.length % 4) % 4);
+  const base64 = (b64 + pad).replace(/-/g,'+').replace(/_/g,'/');
+  const raw = atob(base64);
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+
+async function subscribeToPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+    }
+    const key = SALON_SLUG ? `push-sub-${SALON_SLUG}` : 'push-sub';
+    await db.from('settings').upsert({ key, value: JSON.stringify(sub) });
+  } catch(e) {}
 }
 
 // ── CRM: CLIENTES ──

@@ -271,6 +271,13 @@
       color: var(--dim); opacity: 0.4; cursor: not-allowed;
     }
 
+    .cal-day.blocked {
+      color: #EF4444; opacity: 0.45; cursor: not-allowed;
+      background: rgba(239,68,68,0.04);
+      border-color: rgba(239,68,68,0.15);
+      position: relative;
+    }
+
     .cal-day.today {
       border-color: var(--primary);
       color: var(--primary); font-weight: 800;
@@ -965,10 +972,44 @@
             <div class="sum-row"><span class="sum-lbl">Pagamento</span><span class="sum-val" id="conf-payment"></span></div>
           </div>
           <button class="btn-new" onclick="newBooking()">+ Novo Agendamento</button>
+          <a id="wpp-confirm-btn" href="#" target="_blank" rel="noopener"
+            style="display:none;margin-top:8px;width:100%;padding:16px;
+                   background:rgba(37,211,102,0.08);border:1px solid rgba(37,211,102,0.25);
+                   color:#25D366;border-radius:var(--r-sm);font-size:15px;font-weight:600;
+                   cursor:pointer;font-family:'Inter',sans-serif;text-decoration:none;
+                   text-align:center;transition:all 0.2s;display:none">
+            📱 Confirmar pelo WhatsApp
+          </a>
         </div>
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- CANCELAR AGENDAMENTO -->
+<div style="padding:0 16px 48px;max-width:500px;margin:0 auto">
+  <div style="text-align:center;margin:8px 0 14px">
+    <button onclick="toggleCancelForm()"
+      style="background:none;border:none;color:var(--dim);font-size:13px;
+             cursor:pointer;font-family:'Inter',sans-serif;padding:8px;
+             text-decoration:underline;text-underline-offset:3px">
+      Cancelar um agendamento existente
+    </button>
+  </div>
+  <div id="cancel-form" style="display:none">
+    <div class="card slide-in">
+      <div class="card-ttl" style="font-size:17px;margin-bottom:16px">Cancelar Agendamento</div>
+      <div class="fgroup">
+        <label class="flabel">Código do agendamento</label>
+        <input type="text" class="finput" id="cancel-code"
+          placeholder="Ex: A1B2C3"
+          style="text-transform:uppercase;letter-spacing:0.1em;font-weight:700;font-size:18px"
+          oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')">
+      </div>
+      <button class="btn-main" onclick="lookupCancellation()">Buscar agendamento →</button>
+      <div id="cancel-result" style="margin-top:14px"></div>
+    </div>
   </div>
 </div>
 
@@ -999,7 +1040,7 @@ let config = {
 };
 
 let sel = { service: null, date: null, time: null, paymentMethod: null };
-let timeSlots = [], calYear, calMonth;
+let timeSlots = [], calYear, calMonth, blockedDates = [];
 
 function generateSlots() {
   const toMins = t => { const [h,m] = t.split(':').map(Number); return h*60+m; };
@@ -1019,6 +1060,11 @@ async function loadConfig() {
     const configKey = SALON_SLUG ? `config-${SALON_SLUG}` : 'config';
     const { data } = await db.from('settings').select('value').eq('key', configKey).single();
     if (data && data.value) config = { ...config, ...JSON.parse(data.value) };
+  } catch(e) {}
+  try {
+    const bdKey = SALON_SLUG ? `blocked-dates-${SALON_SLUG}` : 'blocked-dates';
+    const { data: bd } = await db.from('settings').select('value').eq('key', bdKey).single();
+    if (bd && bd.value) blockedDates = JSON.parse(bd.value);
   } catch(e) {}
   if (config.primaryColor) {
     document.documentElement.style.setProperty('--primary', config.primaryColor);
@@ -1090,12 +1136,15 @@ function renderCalendar() {
     const dayDate = new Date(calYear, calMonth, d);
     const isToday = calYear === today.getFullYear() && calMonth === today.getMonth() && d === today.getDate();
     const isPast = dayDate < today || (isToday && todayExpired);
+    const isBlocked = !isPast && blockedDates.includes(ds);
     const isSelected = ds === sel.date;
     let cls = 'cal-day';
     if (isPast) cls += ' dis';
+    else if (isBlocked) cls += ' dis blocked';
     else if (isSelected) cls += ' sel';
     else if (isToday) cls += ' today';
-    html += `<div class="${cls}" ${!isPast ? `onclick="pickDay('${ds}',this)"` : ''}>${d}</div>`;
+    const clickable = !isPast && !isBlocked;
+    html += `<div class="${cls}" ${clickable ? `onclick="pickDay('${ds}',this)"` : ''}>${d}</div>`;
   }
 
   document.getElementById('cal-grid').innerHTML = html;
@@ -1336,6 +1385,21 @@ async function confirmBooking() {
     document.getElementById('conf-time').textContent = sel.time;
     document.getElementById('conf-price').textContent = `R$ ${sel.service.price}`;
     document.getElementById('conf-payment').textContent = sel.paymentMethod === 'pix' ? 'PIX — Aguardando confirmação' : sel.paymentMethod === 'cartao' ? 'Cartão — Aguardando confirmação' : 'Pendente';
+    const wppBtn = document.getElementById('wpp-confirm-btn');
+    if (wppBtn && config.whatsappPhone) {
+      const phone = config.whatsappPhone.replace(/\D/g,'');
+      const msg = encodeURIComponent(
+        `Olá! Acabei de confirmar meu agendamento:\n\n` +
+        `📋 Código: *${code}*\n` +
+        `✂️ Serviço: *${sel.service.name}*\n` +
+        `📅 Data: *${formatDateShort(sel.date)}*\n` +
+        `🕐 Horário: *${sel.time}*\n` +
+        `💰 Valor: *R$ ${sel.service.price}*\n\n` +
+        `Confirmo minha presença! 😊`
+      );
+      wppBtn.href = `https://wa.me/55${phone}?text=${msg}`;
+      wppBtn.style.display = 'block';
+    }
     [1,2,3,4,5].forEach(i => document.getElementById('step'+i).classList.add('hidden'));
     const ss = document.getElementById('success-screen');
     ss.classList.remove('hidden');
@@ -1358,6 +1422,75 @@ function newBooking() {
   const now = new Date(); calYear = now.getFullYear(); calMonth = now.getMonth();
   renderCalendar();
   goStep(1);
+}
+
+// ── CANCELAMENTO PELO CLIENTE ──
+function toggleCancelForm() {
+  const f = document.getElementById('cancel-form');
+  const visible = f.style.display !== 'none';
+  f.style.display = visible ? 'none' : 'block';
+  if (!visible) setTimeout(() => document.getElementById('cancel-code').focus(), 50);
+}
+
+async function lookupCancellation() {
+  const code   = (document.getElementById('cancel-code').value || '').trim().toUpperCase();
+  const result = document.getElementById('cancel-result');
+  if (code.length < 4) {
+    result.innerHTML = `<div style="padding:14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.18);border-radius:12px;font-size:14px;color:#EF4444;text-align:center">Digite o código do agendamento (6 caracteres).</div>`;
+    return;
+  }
+  result.innerHTML = `<div style="text-align:center;padding:20px;color:var(--dim);font-size:14px">🔍 Buscando...</div>`;
+  try {
+    let q = db.from('bookings').select('*').eq('code', code).eq('status', 'agendado');
+    if (SALON_SLUG) q = q.or(`salon_slug.eq.${SALON_SLUG},salon_slug.is.null`);
+    const { data, error } = await q;
+    if (error) throw error;
+    if (!data || !data.length) {
+      result.innerHTML = `<div style="text-align:center;padding:24px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.18);border-radius:14px">
+        <div style="font-size:32px;margin-bottom:10px">🔎</div>
+        <div style="font-size:15px;font-weight:700;color:#EF4444;margin-bottom:4px">Agendamento não encontrado</div>
+        <div style="font-size:13px;color:var(--muted-2)">Verifique o código ou o agendamento já foi cancelado.</div>
+      </div>`;
+      return;
+    }
+    const b = data[0];
+    const bookingDt = new Date(`${b.booking_date}T${b.booking_time}:00`);
+    const diffMins  = (bookingDt - new Date()) / 60000;
+    const canCancel = diffMins > 30;
+    result.innerHTML = `
+    <div style="background:rgba(255,255,255,0.025);border:1px solid var(--border-2);border-radius:14px;overflow:hidden;margin-bottom:12px">
+      <div class="sum-row"><span class="sum-lbl">Serviço</span><span class="sum-val">${b.service}</span></div>
+      <div class="sum-row"><span class="sum-lbl">Data</span><span class="sum-val">${formatDateShort(b.booking_date)}</span></div>
+      <div class="sum-row"><span class="sum-lbl">Horário</span><span class="sum-val">${b.booking_time}</span></div>
+      <div class="sum-row"><span class="sum-lbl">Valor</span><span class="sum-val">R$ ${b.service_price}</span></div>
+    </div>
+    ${canCancel
+      ? `<button class="btn-main" style="background:linear-gradient(135deg,#EF4444,#DC2626);box-shadow:0 6px 24px rgba(239,68,68,0.35)" onclick="confirmCancellation('${b.id}')">Cancelar este agendamento</button>
+         <p style="font-size:12px;color:var(--muted-2);text-align:center;margin-top:10px;line-height:1.5">⚠️ Esta ação não pode ser desfeita. O horário será liberado.</p>`
+      : `<div style="text-align:center;padding:20px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.18);border-radius:14px">
+           <div style="font-size:32px;margin-bottom:10px">⏰</div>
+           <div style="font-size:15px;font-weight:700;color:#EF4444;margin-bottom:6px">Prazo encerrado</div>
+           <div style="font-size:13px;color:var(--muted-2);line-height:1.6">
+             Cancelamentos só são aceitos até <strong>30 minutos antes</strong> do horário agendado.<br>
+             ${diffMins > 0 ? `Faltam apenas ${Math.ceil(diffMins)} min.` : 'O horário já passou.'}
+           </div>
+         </div>`}`;
+  } catch(e) {
+    result.innerHTML = `<div style="color:#EF4444;font-size:14px;text-align:center;padding:16px">Erro: ${e.message}</div>`;
+  }
+}
+
+async function confirmCancellation(bookingId) {
+  try {
+    await db.from('bookings').update({ status: 'cancelado' }).eq('id', bookingId);
+    document.getElementById('cancel-result').innerHTML = `
+    <div style="text-align:center;padding:28px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:16px">
+      <div style="font-size:44px;margin-bottom:12px">✅</div>
+      <div style="font-size:17px;font-weight:700;color:var(--success);margin-bottom:6px">Agendamento cancelado</div>
+      <div style="font-size:13px;color:var(--muted-2)">Seu horário foi liberado com sucesso.</div>
+    </div>`;
+    document.getElementById('cancel-code').value = '';
+  } catch(e) { alert('Erro ao cancelar: ' + e.message); }
 }
 
 // ── INSTALL PROMPT ──
