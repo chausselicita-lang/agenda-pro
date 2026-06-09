@@ -11,16 +11,16 @@
     :root {
       --primary: #9b2335;
       --secondary: #c94070;
-      --bg: #F1F4F8;
-      --surface: rgba(255,255,255,0.90);
-      --surface-2: rgba(255,255,255,1);
-      --border: rgba(0,0,0,0.08);
-      --border-2: rgba(0,0,0,0.13);
-      --text: #0F172A;
-      --muted: #334155;
-      --muted-2: #475569;
-      --dim: #94A3B8;
-      --success: #059669;
+      --bg: #07090F;
+      --surface: rgba(255,255,255,0.04);
+      --surface-2: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.10);
+      --border-2: rgba(255,255,255,0.16);
+      --text: #F8FAFC;
+      --muted: #CBD5E1;
+      --muted-2: #94A3B8;
+      --dim: #64748B;
+      --success: #10B981;
       --r: 18px;
       --r-sm: 14px;
       --r-lg: 24px;
@@ -33,8 +33,7 @@
     }
 
     body {
-      background: linear-gradient(160deg, #fde8ec 0%, #F1F4F8 45%) fixed;
-      background-attachment: fixed;
+      background: var(--bg);
       color: var(--text);
       font-family: 'Inter', -apple-system, sans-serif;
       min-height: 100vh;
@@ -52,7 +51,7 @@
 
     /* ── HEADER ── */
     .app-header {
-      background: rgba(253,232,236,0.92);
+      background: rgba(7,9,15,0.92);
       backdrop-filter: blur(24px) saturate(200%);
       -webkit-backdrop-filter: blur(24px) saturate(200%);
       border-bottom: 1px solid var(--border);
@@ -145,7 +144,6 @@
       border-radius: var(--r); padding: 22px 20px;
       margin-bottom: 14px;
       position: relative; overflow: hidden;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
     }
 
     .card::before {
@@ -209,7 +207,7 @@
     .svc-price {
       font-family: Georgia, 'Helvetica Neue', Helvetica, sans-serif;
       font-size: 15px; font-weight: 700;
-      color: var(--primary);
+      color: #FFF176;
       letter-spacing: 0.01em;
     }
 
@@ -529,7 +527,7 @@
 
     .pay-amount-val {
       font-family: Georgia, sans-serif;
-      font-size: 30px; font-weight: 700; color: var(--primary);
+      font-size: 30px; font-weight: 700; color: #FFF176;
     }
 
     .pay-options { display: flex; flex-direction: column; gap: 10px; }
@@ -611,7 +609,7 @@
 
     .pix-val-big {
       font-family: Georgia, sans-serif;
-      font-size: 34px; font-weight: 700; color: var(--primary);
+      font-size: 34px; font-weight: 700; color: #FFF176;
     }
 
     .pix-key-display {
