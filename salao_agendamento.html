@@ -819,14 +819,13 @@
 </div>
 
 <header class="app-header">
-  <div class="header-logo" id="header-icon">✂️</div>
+  <div class="header-logo" id="header-icon" onclick="logoTap()">✂️</div>
   <div class="header-info">
     <div class="header-name" id="header-name">AgendaPro</div>
     <div class="header-sub">Agendamento Online</div>
   </div>
   <span class="online-badge"><span class="live-dot"></span>Online</span>
   <button class="install-hdr-btn" id="install-hdr-btn" onclick="doInstall()" title="Instalar app">⬇️</button>
-  <a href="./salao_admin.html" class="admin-btn" title="Painel Admin">⚙️</a>
 </header>
 
 <div id="loading-screen">
@@ -1546,6 +1545,18 @@ function dismissInstall() {
 window.addEventListener('appinstalled', () => {
   dismissInstall();
 });
+
+let _tapCount = 0, _tapTimer = null;
+function logoTap() {
+  _tapCount++;
+  clearTimeout(_tapTimer);
+  if (_tapCount >= 5) {
+    _tapCount = 0;
+    window.location.href = './salao_admin.html';
+  } else {
+    _tapTimer = setTimeout(() => { _tapCount = 0; }, 1500);
+  }
+}
 
 loadConfig();
 </script>
