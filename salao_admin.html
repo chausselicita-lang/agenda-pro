@@ -669,8 +669,8 @@
     .install-banner.visible { transform: translateY(0); }
     .install-banner-icon {
       width: 46px; height: 46px;
-      background: linear-gradient(135deg, var(--indigo), var(--violet));
       border-radius: 14px; flex-shrink: 0;
+      object-fit: cover;
       display: flex; align-items: center; justify-content: center;
       font-size: 22px; font-weight: 800;
       color: white; font-family: 'Syne', sans-serif;
@@ -1172,7 +1172,7 @@
 
 <!-- INSTALL BANNER (admin) -->
 <div class="install-banner" id="install-banner">
-  <div class="install-banner-icon">A</div>
+  <img src="./icon-512.png" class="install-banner-icon" alt="AgendaPro">
   <div class="install-banner-text">
     <div class="install-banner-title">Instale o painel AGENDAPRO</div>
     <div class="install-banner-sub">Gerencie sua agenda como app</div>
