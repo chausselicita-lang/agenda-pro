@@ -65,6 +65,8 @@
       border-radius: 14px; flex-shrink: 0;
       object-fit: cover; cursor: pointer;
       -webkit-user-select: none; user-select: none;
+      -webkit-touch-callout: none;
+      pointer-events: auto;
     }
 
     .header-info { flex: 1; }
@@ -849,6 +851,8 @@
 
 <header class="app-header">
   <img src="./icon-512.png" class="header-logo" id="header-icon" alt="AgendaPro"
+    draggable="false"
+    oncontextmenu="return false"
     ontouchstart="logoTouchStart(event)"
     ontouchend="logoTouchEnd(event)"
     ontouchcancel="logoCancelPress()"
