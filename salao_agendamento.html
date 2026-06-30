@@ -91,6 +91,17 @@
       white-space: nowrap;
     }
 
+    .admin-btn {
+      width: 34px; height: 34px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; text-decoration: none;
+      transition: background 0.2s;
+    }
+    .admin-btn:active { background: rgba(255,255,255,0.12); }
+
     .live-dot {
       width: 6px; height: 6px;
       background: var(--success); border-radius: 50%;
@@ -812,6 +823,7 @@
     <div class="header-sub">Agendamento Online</div>
   </div>
   <span class="online-badge"><span class="live-dot"></span>Online</span>
+  <a href="./salao_admin.html" class="admin-btn" title="Painel Admin">⚙️</a>
 </header>
 
 <div id="loading-screen">
