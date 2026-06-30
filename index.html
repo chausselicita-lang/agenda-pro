@@ -660,8 +660,13 @@
 
 <!-- NAV -->
 <nav>
-  <a href="#" class="nav-logo">
-    <div class="logo-gem">✦</div>
+  <a href="javascript:void(0)" class="nav-logo">
+    <img
+      id="logoIcon"
+      src="icon-512.png"
+      alt="AgendaPro"
+      style="width: 50px; height: 50px; cursor: pointer;"
+    />
     Agenda<span>Pro</span>
   </a>
   <div class="nav-right">
@@ -862,6 +867,34 @@
   // Suprime o prompt nativo de instalação na landing page.
   // O prompt só deve aparecer após o dono concluir o cadastro.
   window.addEventListener('beforeinstallprompt', e => e.preventDefault());
+</script>
+<script>
+let longPressTimer;
+const logo = document.getElementById('logoIcon');
+
+logo.addEventListener('mousedown', () => {
+  longPressTimer = setTimeout(() => {
+    window.location.href = 'salao_admin.html';
+  }, 500);
+});
+
+logo.addEventListener('mouseup', () => clearTimeout(longPressTimer));
+logo.addEventListener('mouseleave', () => clearTimeout(longPressTimer));
+
+logo.addEventListener('click', (e) => {
+  if (!longPressTimer) {
+    window.location.href = 'salao_agendamento.html';
+  }
+});
+
+// Mobile support
+logo.addEventListener('touchstart', () => {
+  longPressTimer = setTimeout(() => {
+    window.location.href = 'salao_admin.html';
+  }, 500);
+});
+
+logo.addEventListener('touchend', () => clearTimeout(longPressTimer));
 </script>
 </body>
 </html>
