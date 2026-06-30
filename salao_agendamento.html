@@ -91,16 +91,18 @@
       white-space: nowrap;
     }
 
-    .admin-btn {
+    .admin-btn, .install-hdr-btn {
       width: 34px; height: 34px;
       background: rgba(255,255,255,0.05);
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 10px; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
-      font-size: 16px; text-decoration: none;
+      font-size: 16px; text-decoration: none; cursor: pointer;
       transition: background 0.2s;
     }
-    .admin-btn:active { background: rgba(255,255,255,0.12); }
+    .admin-btn:active, .install-hdr-btn:active { background: rgba(255,255,255,0.12); }
+    .install-hdr-btn { display: none; }
+    .install-hdr-btn.visible { display: flex; }
 
     .live-dot {
       width: 6px; height: 6px;
@@ -823,6 +825,7 @@
     <div class="header-sub">Agendamento Online</div>
   </div>
   <span class="online-badge"><span class="live-dot"></span>Online</span>
+  <button class="install-hdr-btn" id="install-hdr-btn" onclick="doInstall()" title="Instalar app">⬇️</button>
   <a href="./salao_admin.html" class="admin-btn" title="Painel Admin">⚙️</a>
 </header>
 
@@ -1516,6 +1519,7 @@ let _deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   _deferredPrompt = e;
+  document.getElementById('install-hdr-btn').classList.add('visible');
   if (!localStorage.getItem('pwa-dismissed')) {
     setTimeout(() => {
       document.getElementById('install-banner').classList.add('visible');
@@ -1529,6 +1533,7 @@ function doInstall() {
   _deferredPrompt.userChoice.then(() => {
     _deferredPrompt = null;
     dismissInstall();
+    document.getElementById('install-hdr-btn').classList.remove('visible');
   });
 }
 
@@ -1536,6 +1541,7 @@ function dismissInstall() {
   document.getElementById('install-banner').classList.remove('visible');
   localStorage.setItem('pwa-dismissed', '1');
 }
+
 
 window.addEventListener('appinstalled', () => {
   dismissInstall();
