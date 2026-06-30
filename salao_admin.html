@@ -285,9 +285,11 @@
 
     /* TABS */
     .nav-tabs {
-      background: rgba(6,8,15,0.95);
-      border-bottom: 1px solid var(--border);
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+      background: rgba(6,8,15,0.97);
+      border-top: 1px solid var(--border);
       display: flex; padding: 0 6px;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
       overflow-x: auto; scrollbar-width: none;
     }
 
@@ -295,21 +297,21 @@
 
     .nav-tab {
       flex: 1; min-width: 0;
-      padding: 14px 6px; text-align: center;
+      padding: 12px 6px 10px; text-align: center;
       font-size: 14px; font-weight: 600;
       color: var(--muted-2);
-      border-bottom: 2px solid transparent;
+      border-top: 2px solid transparent;
       cursor: pointer; white-space: nowrap;
       transition: all 0.2s;
     }
 
-    .nav-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+    .nav-tab.active { color: var(--blue); border-top-color: var(--blue); }
 
     .tab-pane { display: none; }
     .tab-pane.active { display: block; }
 
     /* CONTAINER */
-    .page { max-width: 640px; margin: 0 auto; padding: 16px; }
+    .page { max-width: 640px; margin: 0 auto; padding: 16px; padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
 
     /* STATS */
     .stats {
@@ -336,9 +338,9 @@
 
     .stat-num {
       font-family: 'Syne', sans-serif;
-      font-size: 34px; font-weight: 800;
+      font-size: 0.85rem; font-weight: 300;
       color: #E2E8F0; line-height: 1;
-      letter-spacing: -0.03em;
+      letter-spacing: -0.01em;
     }
 
     .stat-num.accent {
@@ -777,9 +779,9 @@
     }
 
     .rel-card-val {
-      font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800;
+      font-family: 'Syne', sans-serif; font-size: 0.85rem; font-weight: 300;
       color: #E2E8F0; line-height: 1.1; margin-bottom: 3px;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.01em;
     }
 
     .rel-card-val.green { color: #34D399; }
@@ -1415,8 +1417,8 @@
 </div>
 
 <script>
-const SUPABASE_URL = 'https://zigghtvlmftgjlohuhla.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_o5ibiwWTvnZ8gXfdJQkFqA_jKZhTiGU';
+const SUPABASE_URL = 'https://fmkuihcpdsjmsukzjsqm.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZta3VpaGNwZHNqbXN1a3pqc3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NTE1MjcsImV4cCI6MjA5NzEyNzUyN30.NmuvXGofTuRo9gYbjbuS8hDQRmH-eplXnbZ0zOpMu5k';
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
