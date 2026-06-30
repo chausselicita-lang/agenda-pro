@@ -679,6 +679,36 @@
 
     .slide-in { animation: slideUp 0.3s cubic-bezier(0.22,1,0.36,1) both; }
 
+    /* ── LOGO POPUP ── */
+    .logo-popup {
+      position: fixed; inset: 0; z-index: 400;
+      display: flex; align-items: flex-start; justify-content: center;
+      padding-top: 68px;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .logo-popup.visible { opacity: 1; pointer-events: all; }
+    .logo-popup-box {
+      background: rgba(18,20,30,0.98);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px; padding: 18px 20px;
+      display: flex; gap: 14px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    }
+    .logo-popup-btn {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 8px; padding: 14px 18px; text-decoration: none;
+      border-radius: 14px; background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      transition: background 0.15s;
+    }
+    .logo-popup-btn:active { background: rgba(255,255,255,0.12); }
+    .logo-popup-btn img { width: 54px; height: 54px; border-radius: 13px; object-fit: cover; }
+    .logo-popup-btn span { font-size: 12px; font-weight: 600; color: #CBD5E1; letter-spacing: 0.02em; }
+
     /* ── INSTALL BANNER ── */
     .install-banner {
       position: fixed;
@@ -791,6 +821,20 @@
   </script>
 </head>
 <body>
+
+<!-- LOGO POPUP -->
+<div class="logo-popup" id="logo-popup" onclick="closeLogoPopup()">
+  <div class="logo-popup-box" onclick="event.stopPropagation()">
+    <a href="./salao_agendamento.html" class="logo-popup-btn">
+      <img src="./icon-512.png" alt="Cliente">
+      <span>Agendar</span>
+    </a>
+    <a href="./salao_admin.html" class="logo-popup-btn">
+      <img src="./icon-admin-192.png" alt="Admin">
+      <span>Admin</span>
+    </a>
+  </div>
+</div>
 
 <!-- INSTALL BANNER -->
 <div class="install-banner" id="install-banner" role="complementary" aria-label="Instalar aplicativo">
@@ -1531,34 +1575,30 @@ function dismissInstall() {
 }
 
 let _logoTimer = null;
-let _logoPressed = false;
+let _logoLong = false;
 
 function logoTouchStart(e) {
   e.preventDefault();
-  _logoPressed = false;
+  _logoLong = false;
   clearTimeout(_logoTimer);
-  _logoTimer = setTimeout(() => {
-    _logoPressed = true;
-    window.location.href = './salao_admin.html';
-  }, 600);
+  _logoTimer = setTimeout(() => { _logoLong = true; openLogoPopup(); }, 600);
 }
 function logoTouchEnd() {
   clearTimeout(_logoTimer);
-  if (!_logoPressed) window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (!_logoLong) window.location.href = './salao_agendamento.html';
 }
 function logoMouseDown() {
-  _logoPressed = false;
+  _logoLong = false;
   clearTimeout(_logoTimer);
-  _logoTimer = setTimeout(() => {
-    _logoPressed = true;
-    window.location.href = './salao_admin.html';
-  }, 600);
+  _logoTimer = setTimeout(() => { _logoLong = true; openLogoPopup(); }, 600);
 }
 function logoMouseUp() {
   clearTimeout(_logoTimer);
-  if (!_logoPressed) window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (!_logoLong) window.location.href = './salao_agendamento.html';
 }
 function logoCancelPress() { clearTimeout(_logoTimer); }
+function openLogoPopup() { document.getElementById('logo-popup').classList.add('visible'); }
+function closeLogoPopup() { document.getElementById('logo-popup').classList.remove('visible'); }
 
 window.addEventListener('appinstalled', () => {
   dismissInstall();
