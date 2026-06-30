@@ -850,9 +850,8 @@
 <header class="app-header">
   <img src="./icon-512.png" class="header-logo" id="header-icon" alt="AgendaPro"
     ontouchstart="logoTouchStart(event)"
-    ontouchend="logoTouchEnd()"
+    ontouchend="logoTouchEnd(event)"
     ontouchcancel="logoCancelPress()"
-    ontouchmove="logoCancelPress()"
     onmousedown="logoMouseDown()"
     onmouseup="logoMouseUp()"
     onmouseleave="logoCancelPress()">
@@ -1576,16 +1575,28 @@ function dismissInstall() {
 
 let _logoTimer = null;
 let _logoLong = false;
+let _logoStartX = 0;
+let _logoStartY = 0;
 
 function logoTouchStart(e) {
   e.preventDefault();
   _logoLong = false;
+  _logoStartX = e.touches[0].clientX;
+  _logoStartY = e.touches[0].clientY;
   clearTimeout(_logoTimer);
-  _logoTimer = setTimeout(() => { _logoLong = true; openLogoPopup(); }, 600);
+  _logoTimer = setTimeout(() => {
+    _logoLong = true;
+    openLogoPopup();
+  }, 600);
 }
-function logoTouchEnd() {
+function logoTouchEnd(e) {
   clearTimeout(_logoTimer);
-  if (!_logoLong) window.location.href = './salao_agendamento.html';
+  if (!_logoLong) {
+    // toque rápido — verifica se não houve deslocamento
+    const dx = Math.abs(e.changedTouches[0].clientX - _logoStartX);
+    const dy = Math.abs(e.changedTouches[0].clientY - _logoStartY);
+    if (dx < 10 && dy < 10) window.location.href = './salao_agendamento.html';
+  }
 }
 function logoMouseDown() {
   _logoLong = false;
