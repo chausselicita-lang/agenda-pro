@@ -62,11 +62,9 @@
 
     .header-logo {
       width: 46px; height: 46px;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 24px; flex-shrink: 0;
-      box-shadow: 0 4px 18px rgba(0,0,0,0.5);
+      border-radius: 14px; flex-shrink: 0;
+      object-fit: cover; cursor: pointer;
+      -webkit-user-select: none; user-select: none;
     }
 
     .header-info { flex: 1; }
@@ -806,7 +804,10 @@
 </div>
 
 <header class="app-header">
-  <div class="header-logo" id="header-icon">✂️</div>
+  <img src="./icon-512.png" class="header-logo" id="header-icon" alt="AgendaPro"
+    onclick="logoClick()"
+    onmousedown="logoLongStart()" onmouseup="logoLongCancel()" onmouseleave="logoLongCancel()"
+    ontouchstart="logoLongStart(event)" ontouchend="logoLongCancel()" ontouchcancel="logoLongCancel()">
   <div class="header-info">
     <div class="header-name" id="header-name">AgendaPro</div>
     <div class="header-sub">Agendamento Online</div>
@@ -1524,6 +1525,19 @@ function dismissInstall() {
   document.getElementById('install-banner').classList.remove('visible');
   localStorage.setItem('pwa-dismissed', '1');
 }
+
+let _logoTimer = null;
+let _logoLongFired = false;
+function logoLongStart(e) {
+  if (e) e.preventDefault();
+  _logoLongFired = false;
+  _logoTimer = setTimeout(() => {
+    _logoLongFired = true;
+    window.location.href = './salao_admin.html';
+  }, 600);
+}
+function logoLongCancel() { clearTimeout(_logoTimer); }
+function logoClick() { if (!_logoLongFired) window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
 window.addEventListener('appinstalled', () => {
   dismissInstall();
