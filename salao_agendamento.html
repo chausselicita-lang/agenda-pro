@@ -1590,7 +1590,7 @@ function logoTouchStart(e) {
   clearTimeout(_logoTimer);
   _logoTimer = setTimeout(() => {
     _logoLong = true;
-    openLogoPopup();
+    window.location.href = './salao_admin.html';
   }, 600);
 }
 function logoTouchEnd(e) {
@@ -1605,7 +1605,7 @@ function logoTouchEnd(e) {
 function logoMouseDown() {
   _logoLong = false;
   clearTimeout(_logoTimer);
-  _logoTimer = setTimeout(() => { _logoLong = true; openLogoPopup(); }, 600);
+  _logoTimer = setTimeout(() => { _logoLong = true; window.location.href = './salao_admin.html'; }, 600);
 }
 function logoMouseUp() {
   clearTimeout(_logoTimer);
