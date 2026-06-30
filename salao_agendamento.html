@@ -62,11 +62,11 @@
 
     .header-logo {
       width: 46px; height: 46px;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 24px; flex-shrink: 0;
-      box-shadow: 0 4px 18px rgba(0,0,0,0.5);
+      border-radius: 14px; flex-shrink: 0;
+      object-fit: cover; cursor: pointer;
+      -webkit-user-select: none; user-select: none;
+      -webkit-touch-callout: none;
+      pointer-events: auto;
     }
 
     .header-info { flex: 1; }
@@ -90,19 +90,6 @@
       font-size: 12px; font-weight: 600;
       white-space: nowrap;
     }
-
-    .admin-btn, .install-hdr-btn {
-      width: 34px; height: 34px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 10px; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 16px; text-decoration: none; cursor: pointer;
-      transition: background 0.2s;
-    }
-    .admin-btn:active, .install-hdr-btn:active { background: rgba(255,255,255,0.12); }
-    .install-hdr-btn { display: none; }
-    .install-hdr-btn.visible { display: flex; }
 
     .live-dot {
       width: 6px; height: 6px;
@@ -694,6 +681,36 @@
 
     .slide-in { animation: slideUp 0.3s cubic-bezier(0.22,1,0.36,1) both; }
 
+    /* ── LOGO POPUP ── */
+    .logo-popup {
+      position: fixed; inset: 0; z-index: 400;
+      display: flex; align-items: flex-start; justify-content: center;
+      padding-top: 68px;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .logo-popup.visible { opacity: 1; pointer-events: all; }
+    .logo-popup-box {
+      background: rgba(18,20,30,0.98);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px; padding: 18px 20px;
+      display: flex; gap: 14px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    }
+    .logo-popup-btn {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 8px; padding: 14px 18px; text-decoration: none;
+      border-radius: 14px; background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      transition: background 0.15s;
+    }
+    .logo-popup-btn:active { background: rgba(255,255,255,0.12); }
+    .logo-popup-btn img { width: 54px; height: 54px; border-radius: 13px; object-fit: cover; }
+    .logo-popup-btn span { font-size: 12px; font-weight: 600; color: #CBD5E1; letter-spacing: 0.02em; }
+
     /* ── INSTALL BANNER ── */
     .install-banner {
       position: fixed;
@@ -807,6 +824,20 @@
 </head>
 <body>
 
+<!-- LOGO POPUP -->
+<div class="logo-popup" id="logo-popup" onclick="closeLogoPopup()">
+  <div class="logo-popup-box" onclick="event.stopPropagation()">
+    <a href="./salao_agendamento.html" class="logo-popup-btn">
+      <img src="./icon-512.png" alt="Cliente">
+      <span>Agendar</span>
+    </a>
+    <a href="./salao_admin.html" class="logo-popup-btn">
+      <img src="./icon-admin-192.png" alt="Admin">
+      <span>Admin</span>
+    </a>
+  </div>
+</div>
+
 <!-- INSTALL BANNER -->
 <div class="install-banner" id="install-banner" role="complementary" aria-label="Instalar aplicativo">
   <img src="./icon-512.png" class="install-icon" id="install-icon" alt="AgendaPro">
@@ -819,13 +850,20 @@
 </div>
 
 <header class="app-header">
-  <div class="header-logo" id="header-icon" onclick="logoTap()">✂️</div>
+  <img src="./icon-512.png" class="header-logo" id="header-icon" alt="AgendaPro"
+    draggable="false"
+    oncontextmenu="return false"
+    ontouchstart="logoTouchStart(event)"
+    ontouchend="logoTouchEnd(event)"
+    ontouchcancel="logoCancelPress()"
+    onmousedown="logoMouseDown()"
+    onmouseup="logoMouseUp()"
+    onmouseleave="logoCancelPress()">
   <div class="header-info">
     <div class="header-name" id="header-name">AgendaPro</div>
     <div class="header-sub">Agendamento Online</div>
   </div>
   <span class="online-badge"><span class="live-dot"></span>Online</span>
-  <button class="install-hdr-btn" id="install-hdr-btn" onclick="doInstall()" title="Instalar app">⬇️</button>
 </header>
 
 <div id="loading-screen">
@@ -1518,7 +1556,6 @@ let _deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   _deferredPrompt = e;
-  document.getElementById('install-hdr-btn').classList.add('visible');
   if (!localStorage.getItem('pwa-dismissed')) {
     setTimeout(() => {
       document.getElementById('install-banner').classList.add('visible');
@@ -1532,7 +1569,6 @@ function doInstall() {
   _deferredPrompt.userChoice.then(() => {
     _deferredPrompt = null;
     dismissInstall();
-    document.getElementById('install-hdr-btn').classList.remove('visible');
   });
 }
 
@@ -1541,22 +1577,47 @@ function dismissInstall() {
   localStorage.setItem('pwa-dismissed', '1');
 }
 
+let _logoTimer = null;
+let _logoLong = false;
+let _logoStartX = 0;
+let _logoStartY = 0;
+
+function logoTouchStart(e) {
+  e.preventDefault();
+  _logoLong = false;
+  _logoStartX = e.touches[0].clientX;
+  _logoStartY = e.touches[0].clientY;
+  clearTimeout(_logoTimer);
+  _logoTimer = setTimeout(() => {
+    _logoLong = true;
+    openLogoPopup();
+  }, 600);
+}
+function logoTouchEnd(e) {
+  clearTimeout(_logoTimer);
+  if (!_logoLong) {
+    // toque rápido — verifica se não houve deslocamento
+    const dx = Math.abs(e.changedTouches[0].clientX - _logoStartX);
+    const dy = Math.abs(e.changedTouches[0].clientY - _logoStartY);
+    if (dx < 10 && dy < 10) window.location.href = './salao_agendamento.html';
+  }
+}
+function logoMouseDown() {
+  _logoLong = false;
+  clearTimeout(_logoTimer);
+  _logoTimer = setTimeout(() => { _logoLong = true; openLogoPopup(); }, 600);
+}
+function logoMouseUp() {
+  clearTimeout(_logoTimer);
+  if (!_logoLong) window.location.href = './salao_agendamento.html';
+}
+function logoCancelPress() { clearTimeout(_logoTimer); }
+function openLogoPopup() { document.getElementById('logo-popup').classList.add('visible'); }
+function closeLogoPopup() { document.getElementById('logo-popup').classList.remove('visible'); }
 
 window.addEventListener('appinstalled', () => {
   dismissInstall();
 });
-
-let _tapCount = 0, _tapTimer = null;
-function logoTap() {
-  _tapCount++;
-  clearTimeout(_tapTimer);
-  if (_tapCount >= 5) {
-    _tapCount = 0;
-    window.location.href = './salao_admin.html';
-  } else {
-    _tapTimer = setTimeout(() => { _tapCount = 0; }, 1500);
-  }
-}
 
 loadConfig();
 </script>
