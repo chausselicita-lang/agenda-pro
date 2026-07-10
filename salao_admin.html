@@ -1214,7 +1214,7 @@
   </header>
 
   <div class="nav-tabs">
-    <div class="nav-tab active" onclick="showTab('agenda')">📅 Agenda</div>
+    <div class="nav-tab active" onclick="showTab('agenda')" style="position:relative">📅 Agenda<span class="notif-count" id="nav-badge-agenda" style="display:none"></span></div>
     <div class="nav-tab" onclick="showTab('todos')">📋 Histórico</div>
     <div class="nav-tab" onclick="showTab('relatorios')">📊 Relatórios</div>
     <div class="nav-tab" onclick="showTab('clientes')">👤 Clientes</div>
@@ -1632,6 +1632,10 @@ function setBadge(n) {
       wrap.style.display = 'none';
     }
   }
+  // Visual: badge na aba "Agenda" (leva para a tela de agendamentos)
+  const navBadge = document.getElementById('nav-badge-agenda');
+  if (navBadge) navBadge.style.display = n > 0 ? 'flex' : 'none';
+  if (navBadge && n > 0) navBadge.textContent = n > 99 ? '99+' : n;
   // Nativo: badge no ícone do PWA (apenas quando instalado como PWA)
   try {
     if ('setAppBadge' in navigator)
@@ -1663,6 +1667,7 @@ function showTab(tab, fromHistory = false) {
   });
   document.querySelectorAll('.tab-pane').forEach(c => c.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'agenda') clearBadge();
   if (tab === 'relatorios') renderRelatorios();
   if (tab === 'clientes') renderClientes(activeClientFilter, '');
   if (!fromHistory) history.pushState({ tab, inApp: true }, '');
